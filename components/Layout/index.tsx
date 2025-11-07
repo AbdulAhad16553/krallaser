@@ -72,7 +72,7 @@ const Layout = async ({ children }: { children: React.ReactNode }) => {
             />
             <main className='min-h-screen'>{children}</main>
             <Footer
-                storeData={data?.store?.stores?.[0]}
+                storeData={storeDataWithLogo}
             />
             <Toaster />
             {whatsappLink && (

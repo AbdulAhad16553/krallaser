@@ -26,6 +26,7 @@ import { getStorePage } from "@/hooks/getStorePage"
 import { getSocialLink } from "@/hooks/getSocialLinks"
 import type { ReactElement } from "react"
 import axios from "axios"
+import { getErpnextImageUrl } from "@/lib/erpnextImageUtils"
 
 interface FooterProps {
   storeData: {
@@ -38,6 +39,7 @@ interface FooterProps {
     }
     store_name: string
     id: string
+    company_logo?: string
     store_contact_detail?: {
       email: string
       phone: string
@@ -57,6 +59,7 @@ interface SocialLink {
 
 const Footer = async ({ storeData }: FooterProps) => {
   const footerLogoId = storeData?.store_detail?.footer_logo_id
+  const companyLogo = storeData?.company_logo
   const storeName = storeData?.store_name
   const storeId = storeData?.id
   const tagline = storeData?.store_detail?.tagline
@@ -80,7 +83,7 @@ const Footer = async ({ storeData }: FooterProps) => {
     const API_SECRET = process.env.NEXT_PUBLIC_ERPNEXT_API_SECRET
 
     if (API_KEY && API_SECRET) {
-      const companyName = storeData?.company_id || "Kral Laser"
+      const companyName = "Kral Laser"
       const encodedName = encodeURIComponent(companyName)
       const response = await axios.get(
         `${ERP_BASE_URL}/Company/${encodedName}?fields=["email","phone_no"]`,
@@ -160,14 +163,19 @@ const Footer = async ({ storeData }: FooterProps) => {
             {/* Brand Section - Spans 4 columns */}
             <div className="lg:col-span-4">
               <div className="mb-8">
-                {footerLogoId ? (
+                {companyLogo || footerLogoId ? (
                   <div className="mb-6">
                     <Image
-                      src={`${process.env.NEXT_PUBLIC_NHOST_STORAGE_URL}/files/${footerLogoId}`}
+                      src={
+                        companyLogo
+                          ? getErpnextImageUrl(companyLogo)
+                          : `${process.env.NEXT_PUBLIC_NHOST_STORAGE_URL}/files/${footerLogoId}`
+                      }
                       alt={`${storeName || "Store"} Logo`}
                       width={180}
                       height={60}
                       className="max-h-16 object-contain"
+                      unoptimized={!!companyLogo}
                     />
                   </div>
                 ) : (
