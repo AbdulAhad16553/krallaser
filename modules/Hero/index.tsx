@@ -15,9 +15,7 @@ import {
 import {
   getEffectivePrice,
   hasDiscount,
-  calculateDiscountPercent,
   formatPrice,
-  getBasePriceForDisplay,
 } from "@/lib/currencyUtils";
 
 interface HeroProps {
@@ -47,9 +45,9 @@ const Hero = async ({
   hideOnPage,
 }: HeroProps) => {
   // Extract dynamic data from store
-  const storeName = storeData?.store_name || "Your Store";
+  const storeName = storeData?.store_name || "Kral Laser";
   const tagline = storeData?.store_detail?.tagline;
-  const primaryColor = storeData?.store_detail?.primary_color || "#3B82F6";
+  const primaryColor = storeData?.store_detail?.primary_color || "#EF4444";
   const secondaryColor = storeData?.store_detail?.secondary_color || "#8B5CF6";
   const currency = storeData?.store_detail?.currency || "Rs.";
 
@@ -58,7 +56,7 @@ const Hero = async ({
     try {
       const response = await fetch(
         `${
-          process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"
+          process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000" || "http://localhost:3001"
         }/api/storeStats?storeId=${storeData?.id || 1}`,
         {
           cache: "no-store", // Always fetch fresh data
@@ -113,6 +111,7 @@ const Hero = async ({
 
   // Get the first product from the products array (passed from page)
   const featuredProduct = products && products.length > 0 ? products[0] : null;
+  console.log("featuredProduct", featuredProduct);
   const featuredCategories = categories?.slice(0, 3) || [];
 
   return (
@@ -137,11 +136,15 @@ const Hero = async ({
                   </span>
                   <br />
                   <span
-                  className="text-4xl md:text-5xl lg:text-6xl"
-                  style={{ color: primaryColor }}
-                  >
-                    {storeName}
-                  </span>
+  style={{
+    background: "linear-gradient(90deg, #b70909, #3a1b1b)",   // red → dark
+    WebkitBackgroundClip: "text",
+    WebkitTextFillColor: "transparent",
+    backgroundClip: "text",
+  }}
+>
+  {storeName}
+</span>
                 </h1>
               <p className="text-base md:text-lg text-gray-600 max-w-xl leading-relaxed">
                   {content?.content ||

@@ -71,9 +71,9 @@ const Header = ({ storeData }: { storeData: StoreData }) => {
   const companyId = storeData?.company_id;
   const storeCurrency = storeData?.store_detail?.currency || "Rs.";
   // Contact fallbacks
-  const topBarPhone = storeData?.store_contact_detail?.phone || "+923103339404";
-  const topBarEmail = storeData?.store_contact_detail?.email || "cnckral@gmail.com";
-
+  const topBarPhone =  "+923103339404";
+  const topBarEmail = "cnckral@gmail.com";
+console.log("storeData", storeData,topBarPhone,topBarEmail);
   // Debounce search term
   useEffect(() => {
     const timer = setTimeout(() => {
