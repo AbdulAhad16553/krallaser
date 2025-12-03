@@ -972,7 +972,7 @@ export default function ProductDetailContent({ slug }: ProductDetailContentProps
               </div>
               
               <div className="text-sm text-gray-600">
-                Total: {product.currency} {(product.price * quantity).toLocaleString()}
+                Total: {product.currency} {(product.price !== undefined ? (product.price * quantity).toLocaleString() : "-")}
               </div>
             </div>
           )}
