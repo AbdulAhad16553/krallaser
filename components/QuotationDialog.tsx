@@ -394,7 +394,7 @@ export default function QuotationDialog({
           </p>
         </div>
 
-        {selectedVariation?.attributes?.length > 0 && (
+        {selectedVariation?.attributes && selectedVariation.attributes.length > 0 && (
           <div className="pt-2 border-t">
             <p className="text-xs font-medium text-gray-500 mb-2">Specifications:</p>
             <div className="flex flex-wrap gap-2">

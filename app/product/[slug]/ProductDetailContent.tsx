@@ -1,4 +1,5 @@
 
+
 // "use client";
 
 // import { useState, useEffect, useMemo } from 'react';
@@ -69,6 +70,9 @@
 //   // Quotation dialog state
 //   const [showQuotationDialog, setShowQuotationDialog] = useState(false);
 
+//   // Check if product is custom quotation item
+//   const isCustomQuotationItem = product?.custom_quotation_item === 1;
+
 //   // Helper function to generate full image URL
 //   const getFullImageUrl = (imagePath: string | undefined): string | null => {
 //     if (!imagePath) return null;
@@ -95,61 +99,18 @@
 //     setSelectedAttributes(attributes);
 //   };
 
-//   // Handle variation selection and cart functionality
+//   // Handle variation selection for custom quotation items
 //   const handleVariationClick = (variant: any) => {
-//     if ((variant as any).stock && (variant as any).stock.totalStock > 0) {
+//     // For custom quotation items, always allow selection regardless of stock
+//     if (isCustomQuotationItem) {
+//       setSelectedVariation(variant);
+//       // For custom quotation items, show request quote dialog directly
+//       setShowQuotationDialog(true);
+//     } 
+//     // For non-custom items, only allow if in stock
+//     else if ((variant as any).stock && (variant as any).stock.totalStock > 0) {
 //       setSelectedVariation(variant);
 //       setShowAddToCart(true);
-//     }
-//   };
-
-//   const handleAddToCart = () => {
-//     if (selectedVariation) {
-//       // For template product variations
-//       const cartItem = {
-//         id: product?.name || selectedVariation.name,
-//         name: selectedVariation.item_name,
-//         description: product?.description || "",
-//         type: "item",
-//         basePrice: selectedVariation.price || 0,
-//         salePrice: selectedVariation.price || 0,
-//         category: product?.item_group || "product",
-//         currency: selectedVariation.currency || "PKR",
-//         bundleItems: [],
-//         quantity: quantity,
-//         image: selectedVariation.image,
-//         sku: selectedVariation.name,
-//         variationId: selectedVariation.name,
-//         filterConds: [],
-//       };
-
-//       AddToCart(cartItem, quantity);
-//       // Reset states after adding to cart
-//       setSelectedVariation(null);
-//       setShowAddToCart(false);
-//       setQuantity(1);
-//     } else if (product && !isTemplate && product.stock && product.stock.totalStock > 0) {
-//       // For simple products
-//       const cartItem = {
-//         id: product.name,
-//         name: product.item_name,
-//         description: product.description || "",
-//         type: "item",
-//         basePrice: product.price || 0,
-//         salePrice: product.price || 0,
-//         category: product.item_group || "product",
-//         currency: product.currency || "PKR",
-//         bundleItems: [],
-//         quantity: quantity,
-//         image: product.image,
-//         sku: product.name,
-//         variationId: product.name,
-//         filterConds: [],
-//       };
-
-//       AddToCart(cartItem, quantity);
-//       // Reset quantity after adding to cart
-//       setQuantity(1);
 //     }
 //   };
 
@@ -174,7 +135,6 @@
 //       };
 
 //       AddToCart(cartItem, quantity);
-//       // Optionally show a success message or toast here
 //       setQuantity(1);
 //     }
 //   };
@@ -207,25 +167,20 @@
 //   const isTemplate = product?.variants && product?.variants.length > 0;
 //   const isSimpleProductInStock = product && !isTemplate && product.stock && product.stock.totalStock > 0;
 
-//   // Filter and sort variations - now using ERPNext API attributes
+//   // Filter and sort variations
 //   const filteredVariations = useMemo(() => {
 //     if (!product?.variants) return [];
     
-//     // If no attributes are selected, return all variants
 //     if (selectedAttributes.length === 0) {
 //       return product.variants;
 //     }
     
-//     // Filter variants based on selected attributes
 //     return product.variants.filter(variant => {
-//       // Check if this variant matches all selected attributes
 //       return selectedAttributes.every(selectedAttr => {
-//         // Find the variant's attributes that match the selected attribute name
 //         const matchingAttributes = variant.attributes?.filter((attr: any) => 
 //           attr.attribute === selectedAttr.attribute
 //         ) || [];
         
-//         // Check if any of the matching attributes has the selected value
 //         return matchingAttributes.some((attr: any) => 
 //           attr.attribute_value === selectedAttr.attribute_value
 //         );
@@ -291,7 +246,7 @@
 //     <div className="max-w-6xl mx-auto">
 //       {/* Back Button */}
 //       <Button 
-//         onClick={() => router.back()} 
+//         onClick={() => console.log("object",product)} 
 //         variant="outline" 
 //         className="mb-6"
 //       >
@@ -340,13 +295,19 @@
 //                   Template Product
 //                 </Badge>
 //               )}
-//               {!isTemplate && product.stock && product.stock.totalStock > 0 && (
+//               {isCustomQuotationItem && (
+//                 <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
+//                   <Info className="h-3 w-3 mr-1" />
+//                   Request Quote
+//                 </Badge>
+//               )}
+//               {!isTemplate && !isCustomQuotationItem && product.stock && product.stock.totalStock > 0 && (
 //                 <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
 //                   <Info className="h-3 w-3 mr-1" />
 //                   In Stock: {product.stock.totalStock}
 //                 </Badge>
 //               )}
-//               {!isTemplate && product.stock && product.stock.totalStock === 0 && (
+//               {!isTemplate && !isCustomQuotationItem && product.stock && product.stock.totalStock === 0 && (
 //                 <Badge variant="outline" className="bg-red-50 text-red-700 border-red-200">
 //                   <Info className="h-3 w-3 mr-1" />
 //                   Out of Stock
@@ -372,7 +333,7 @@
 //           <Separator />
 
 //           {/* Simple Product Add to Cart Section */}
-//           {!isTemplate && isSimpleProductInStock && (
+//           {!isTemplate && isSimpleProductInStock && !isCustomQuotationItem && (
 //             <div className="space-y-4">
 //               <h3 className="text-lg font-semibold">Add to Cart</h3>
 //               <div className="flex items-center gap-4">
@@ -429,73 +390,90 @@
 //                 selectedAttributes={selectedAttributes}
 //               />
 
-//               {/* Price List for Filtered Variations - Only show when attributes are selected */}
+//               {/* Price List for Filtered Variations */}
 //               {selectedAttributes.length > 0 && filteredVariations.length > 0 ? (
 //                 <div className="space-y-4">
 //                   <div className="bg-gray-50 rounded-lg p-4">
 //                     <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
 //                       <DollarSign className="h-5 w-5 mr-2 text-green-600" />
-//                       Available Prices ({filteredVariations.length} options)
+//                       Available {isCustomQuotationItem ? "Configurations" : "Prices"} ({filteredVariations.length} options)
 //                     </h3>
                     
 //                     <div className="space-y-2">
-//                       {filteredVariations.map((variant, index) => (
-//                         <div 
-//                           key={variant.name}
-//                           className={`flex items-center justify-between p-3 bg-white rounded-lg border transition-all ${
-//                             (variant as any).stock && (variant as any).stock.totalStock > 0 
-//                               ? 'hover:shadow-md cursor-pointer hover:border-green-300' 
-//                               : 'opacity-60 cursor-not-allowed'
-//                           }`}
-//                           onClick={() => handleVariationClick(variant)}
-//                         >
-//                           <div className="flex-1 flex items-center space-x-3">
-//                             {variant.image && (
-//                               <div className="relative w-12 h-12 rounded-lg overflow-hidden group cursor-pointer" onClick={(e) => {
-//                                 e.stopPropagation();
-//                                 openImagePreview(variant.image, variant.item_name);
-//                               }}>
-//                                 <Image
-//                                   src={getErpnextImageUrl(variant.image)}
-//                                   alt={variant.item_name}
-//                                   width={48}
-//                                   height={48}
-//                                   className="w-full h-full object-cover transition-transform group-hover:scale-110"
-//                                 />
-//                                 <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-30 transition-all duration-200 flex items-center justify-center">
-//                                   <ZoomIn className="h-4 w-4 text-white opacity-0 group-hover:opacity-100 transition-opacity duration-200" />
+//                       {filteredVariations.map((variant, index) => {
+//                         const variantInStock = (variant as any).stock && (variant as any).stock.totalStock > 0;
+//                         const isSelectable = isCustomQuotationItem || variantInStock;
+                        
+//                         return (
+//                           <div 
+//                             key={variant.name}
+//                             className={`flex items-center justify-between p-3 rounded-lg border transition-all ${
+//                               isSelectable 
+//                                 ? 'bg-white hover:shadow-md cursor-pointer hover:border-green-300' 
+//                                 : 'bg-gray-50 opacity-60 cursor-not-allowed'
+//                             } ${selectedVariation?.name === variant.name ? 'border-green-400 ring-1 ring-green-200' : ''}`}
+//                             onClick={() => isSelectable && handleVariationClick(variant)}
+//                           >
+//                             <div className="flex-1 flex items-center space-x-3">
+//                               {variant.image && (
+//                                 <div className="relative w-12 h-12 rounded-lg overflow-hidden group cursor-pointer" onClick={(e) => {
+//                                   e.stopPropagation();
+//                                   openImagePreview(variant.image, variant.item_name);
+//                                 }}>
+//                                   <Image
+//                                     src={getErpnextImageUrl(variant.image)}
+//                                     alt={variant.item_name}
+//                                     width={48}
+//                                     height={48}
+//                                     className="w-full h-full object-cover transition-transform group-hover:scale-110"
+//                                   />
+//                                   <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-30 transition-all duration-200 flex items-center justify-center">
+//                                     <ZoomIn className="h-4 w-4 text-white opacity-0 group-hover:opacity-100 transition-opacity duration-200" />
+//                                   </div>
+//                                 </div>
+//                               )}
+//                               <div className="flex-1">
+//                                 <h4 className="font-medium text-sm text-gray-900 line-clamp-1">
+//                                   {variant.item_name}
+//                                 </h4>
+//                                 <div className="text-xs text-gray-600">
+//                                   {variant.attributes?.map((attr, idx) => (
+//                                     <span key={idx}>
+//                                       {attr.attribute_value}
+//                                       {idx < (variant.attributes?.length || 0) - 1 ? ' • ' : ''}
+//                                     </span>
+//                                   ))}
 //                                 </div>
 //                               </div>
+//                             </div>
+//                             {variant.price && (
+//                               <div className="flex items-center space-x-2">
+//                                 <span className="text-lg font-bold text-green-600">
+//                                   {variant.currency} {variant.price.toLocaleString()}
+//                                 </span>
+//                                 {isCustomQuotationItem ? (
+//                                   <Badge variant="outline" className="text-xs bg-blue-50 text-blue-700 border-blue-200">
+//                                     Request Quote
+//                                   </Badge>
+//                                 ) : variantInStock ? (
+//                                   <Badge variant="outline" className="text-xs bg-green-50 text-green-700 border-green-200">
+//                                     {(variant as any).stock.totalStock} in stock
+//                                   </Badge>
+//                                 ) : (
+//                                   <Badge variant="outline" className="text-xs bg-red-50 text-red-700 border-red-200">
+//                                     Out of stock
+//                                   </Badge>
+//                                 )}
+//                               </div>
 //                             )}
-//                             <div className="flex-1">
-//                               <h4 className="font-medium text-sm text-gray-900 line-clamp-1">
-//                                 {variant.item_name}
-//                               </h4>
-//                             </div>
 //                           </div>
-//                           {variant.price && (
-//                             <div className="flex items-center space-x-2">
-//                               <span className="text-lg font-bold text-green-600">
-//                                 {variant.currency} {variant.price.toLocaleString()}
-//                               </span>
-//                               {(variant as any).stock && (variant as any).stock.totalStock > 0 ? (
-//                                 <Badge variant="outline" className="text-xs bg-green-50 text-green-700 border-green-200">
-//                                   {(variant as any).stock.totalStock} in stock
-//                                 </Badge>
-//                               ) : (
-//                                 <Badge variant="outline" className="text-xs bg-red-50 text-red-700 border-red-200">
-//                                   Out of stock
-//                                 </Badge>
-//                               )}
-//                             </div>
-//                           )}
-//                         </div>
-//                       ))}
+//                         );
+//                       })}
 //                     </div>
 //                   </div>
                   
-//                   {/* Add to Cart Section - Shows when variation is selected */}
-//                   {showAddToCart && selectedVariation && (
+//                   {/* Add to Cart Section - Only for non-custom items */}
+//                   {!isCustomQuotationItem && showAddToCart && selectedVariation && (
 //                     <div className="mt-6 p-4 bg-green-50 border border-green-200 rounded-lg">
 //                       <div className="space-y-4">
 //                         <div className="flex items-center justify-between">
@@ -570,7 +548,7 @@
 //                 <div className="text-center py-8">
 //                   <Package className="h-12 w-12 mx-auto text-gray-400 mb-4" />
 //                   <h3 className="text-lg font-medium text-gray-900 mb-2">Select variations to see prices</h3>
-//                   <p className="text-gray-600 mb-4">Choose your preferred specifications above to view available prices.</p>
+//                   <p className="text-gray-600 mb-4">Choose your preferred specifications above to view available {isCustomQuotationItem ? "configurations" : "prices"}.</p>
 //                 </div>
 //               )}
 //             </div>
@@ -579,15 +557,28 @@
 //           {/* Actions */}
 //           <div className="space-y-4">
 //             {/* Show Request Quote button for custom quotation items OR when simple product is out of stock */}
-//             {product?.custom_quotation_item === 1 || (!isTemplate && product.stock && product.stock.totalStock === 0) ? (
+//             {(isCustomQuotationItem || (!isTemplate && product.stock && product.stock.totalStock === 0)) ? (
 //               <Button 
 //                 size="lg" 
-//                 className="w-full"
+//                 className="w-full bg-blue-600 hover:bg-blue-700 text-white"
 //                 onClick={() => setShowQuotationDialog(true)}
+//                 disabled={isTemplate && isCustomQuotationItem && !selectedVariation}
 //               >
 //                 Request Quote
 //               </Button>
 //             ) : null}
+            
+//             {/* Add to Cart button for simple products in stock */}
+//             {!isTemplate && isSimpleProductInStock && !isCustomQuotationItem && (
+//               <Button 
+//                 size="lg"
+//                 className="w-full bg-green-600 hover:bg-green-700 text-white"
+//                 onClick={handleSimpleProductAddToCart}
+//               >
+//                 <ShoppingCart className="mr-2 h-4 w-4" />
+//                 Add to Cart
+//               </Button>
+//             )}
             
 //             <Button 
 //               variant="outline" 
@@ -616,7 +607,7 @@
 //                 <span className="text-gray-600">UOM:</span>
 //                 <span className="font-medium">{product.stock_uom}</span>
 //               </div>
-//               {!isTemplate && product.stock && (
+//               {!isTemplate && product.stock && !isCustomQuotationItem && (
 //                 <div className="flex justify-between">
 //                   <span className="text-gray-600">Stock Available:</span>
 //                   <span className={`font-medium ${product.stock.totalStock > 0 ? 'text-green-600' : 'text-red-600'}`}>
@@ -628,6 +619,12 @@
 //                 <div className="flex justify-between">
 //                   <span className="text-gray-600">Variations:</span>
 //                   <span className="font-medium">{product.variants?.length || 0}</span>
+//                 </div>
+//               )}
+//               {isCustomQuotationItem && (
+//                 <div className="flex justify-between">
+//                   <span className="text-gray-600">Type:</span>
+//                   <span className="font-medium text-blue-600">Custom Quotation Item</span>
 //                 </div>
 //               )}
 //             </CardContent>
@@ -668,13 +665,12 @@
 //           open={showQuotationDialog}
 //           onClose={() => setShowQuotationDialog(false)}
 //           product={product}
+//           selectedVariation={selectedVariation}
 //         />
 //       )}
 //     </div>
 //   );
 // }
-
-
 
 
 "use client";
@@ -685,7 +681,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import { ArrowLeft, Package, DollarSign, Tag, Info, X, ZoomIn, ShoppingCart, Plus, Minus } from 'lucide-react';
+import { ArrowLeft, Package, DollarSign, Tag, Info, X, ZoomIn, ShoppingCart, Plus, Minus, ChevronLeft, ChevronRight, FileImage } from 'lucide-react';
 import Image from 'next/image';
 import AttributeFilter from '@/common/AttributeFilter';
 import { AddToCart } from '@/sub/cart/addToCart';
@@ -706,6 +702,13 @@ interface Product {
   stock?: {
     totalStock: number;
   };
+  attachments?: Array<{
+    name: string;
+    file_name: string;
+    file_url: string;
+    attached_to_name: string;
+    is_private: number;
+  }>;
   variants?: Array<{
     name: string;
     item_name: string;
@@ -735,9 +738,14 @@ export default function ProductDetailContent({ slug }: ProductDetailContentProps
   // New attribute filter state
   const [selectedAttributes, setSelectedAttributes] = useState<Array<{attribute: string, attribute_value: string}>>([]);
   
-  // Image preview states
-  const [previewImage, setPreviewImage] = useState<string | null>(null);
-  const [previewAlt, setPreviewAlt] = useState<string>('');
+  // Image gallery states
+  const [galleryImages, setGalleryImages] = useState<Array<{
+    url: string;
+    alt: string;
+    type: 'main' | 'attachment';
+  }>>([]);
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const [showImagePreview, setShowImagePreview] = useState(false);
   
   // Cart functionality states
   const [selectedVariation, setSelectedVariation] = useState<any>(null);
@@ -750,25 +758,70 @@ export default function ProductDetailContent({ slug }: ProductDetailContentProps
   // Check if product is custom quotation item
   const isCustomQuotationItem = product?.custom_quotation_item === 1;
 
-  // Helper function to generate full image URL
-  const getFullImageUrl = (imagePath: string | undefined): string | null => {
-    if (!imagePath) return null;
-    return `https://${process.env.NEXT_PUBLIC_ERPNEXT_DOMAIN}${imagePath}`;
-  };
+  // Initialize gallery images from product data
+  useEffect(() => {
+    if (product) {
+      const images: Array<{url: string, alt: string, type: 'main' | 'attachment'}> = [];
+      
+      // Add main product image if exists
+      if (product.image) {
+        images.push({
+          url: getErpnextImageUrl(product.image),
+          alt: product.item_name,
+          type: 'main'
+        });
+      }
+      
+      // Add attachment images
+      if (product.attachments && product.attachments.length > 0) {
+        // Filter only image attachments and add to gallery
+        const imageAttachments = product.attachments.filter(att => {
+          const fileName = att.file_name.toLowerCase();
+          return fileName.endsWith('.jpg') || 
+                 fileName.endsWith('.jpeg') || 
+                 fileName.endsWith('.png') || 
+                 fileName.endsWith('.gif') ||
+                 fileName.endsWith('.webp') ||
+                 fileName.endsWith('.bmp') ||
+                 fileName.endsWith('.svg');
+        });
+        
+        imageAttachments.forEach((attachment, index) => {
+          images.push({
+            url: getErpnextImageUrl(attachment.file_url),
+            alt: attachment.file_name || `Attachment ${index + 1}`,
+            type: 'attachment'
+          });
+        });
+      }
+      
+      setGalleryImages(images);
+    }
+  }, [product]);
 
   // Helper function to open image preview
-  const openImagePreview = (imagePath: string | undefined, alt: string) => {
-    const fullUrl = getFullImageUrl(imagePath);
-    if (fullUrl) {
-      setPreviewImage(fullUrl);
-      setPreviewAlt(alt);
-    }
+  const openImagePreview = (index: number) => {
+    setCurrentImageIndex(index);
+    setShowImagePreview(true);
   };
 
   // Helper function to close image preview
   const closeImagePreview = () => {
-    setPreviewImage(null);
-    setPreviewAlt('');
+    setShowImagePreview(false);
+  };
+
+  // Navigate to next image
+  const nextImage = () => {
+    if (galleryImages.length > 0) {
+      setCurrentImageIndex((prev) => (prev + 1) % galleryImages.length);
+    }
+  };
+
+  // Navigate to previous image
+  const prevImage = () => {
+    if (galleryImages.length > 0) {
+      setCurrentImageIndex((prev) => (prev - 1 + galleryImages.length) % galleryImages.length);
+    }
   };
 
   // Handle attribute changes from the new filter
@@ -808,6 +861,31 @@ export default function ProductDetailContent({ slug }: ProductDetailContentProps
         image: product.image,
         sku: product.name,
         variationId: product.name,
+        filterConds: [],
+      };
+
+      AddToCart(cartItem, quantity);
+      setQuantity(1);
+    }
+  };
+
+  // Handle adding variation to cart
+  const handleAddToCart = () => {
+    if (selectedVariation && selectedVariation.stock && selectedVariation.stock.totalStock > 0) {
+      const cartItem = {
+        id: selectedVariation.name,
+        name: selectedVariation.item_name,
+        description: selectedVariation.description || product?.description || "",
+        type: "item",
+        basePrice: selectedVariation.price || 0,
+        salePrice: selectedVariation.price || 0,
+        category: product?.item_group || "product",
+        currency: selectedVariation.currency || "PKR",
+        bundleItems: [],
+        quantity: quantity,
+        image: selectedVariation.image || product?.image,
+        sku: selectedVariation.name,
+        variationId: selectedVariation.name,
         filterConds: [],
       };
 
@@ -933,20 +1011,28 @@ export default function ProductDetailContent({ slug }: ProductDetailContentProps
   
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         {/* Product Images */}
-        <div className="space-y-4">
+        <div className="space-y-6">
+          {/* Main Image Preview */}
           <div className="aspect-square bg-gray-100 rounded-lg relative group overflow-hidden">
-            {product.image ? (
+            {galleryImages.length > 0 ? (
               <div className="relative w-full h-full">
                 <Image
-                  src={getErpnextImageUrl(product.image)}
-                  alt={product.item_name}
+                  src={galleryImages[0].url}
+                  alt={galleryImages[0].alt}
                   fill
                   className="object-cover cursor-pointer transition-transform group-hover:scale-105"
-                  onClick={() => openImagePreview(product.image, product.item_name)}
+                  onClick={() => openImagePreview(0)}
                 />
                 <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-all duration-200 flex items-center justify-center">
                   <ZoomIn className="h-8 w-8 text-white opacity-0 group-hover:opacity-100 transition-opacity duration-200" />
                 </div>
+                
+                {/* Image count badge */}
+                {galleryImages.length > 1 && (
+                  <div className="absolute top-4 right-4 bg-black/70 text-white text-xs px-2 py-1 rounded-full">
+                    {galleryImages.length} images
+                  </div>
+                )}
               </div>
             ) : (
               <div className="absolute inset-0 flex items-center justify-center text-center text-gray-500">
@@ -957,6 +1043,42 @@ export default function ProductDetailContent({ slug }: ProductDetailContentProps
               </div>
             )}
           </div>
+          
+          {/* Image Thumbnails Grid */}
+          {galleryImages.length > 1 && (
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <h3 className="text-sm font-medium text-gray-700">Gallery Images</h3>
+                <span className="text-xs text-gray-500">{galleryImages.length} images</span>
+              </div>
+              <div className="grid grid-cols-4 gap-2">
+                {galleryImages.map((image, index) => (
+                  <div 
+                    key={index}
+                    className="aspect-square bg-gray-100 rounded-md relative group overflow-hidden cursor-pointer"
+                    onClick={() => openImagePreview(index)}
+                  >
+                    <Image
+                      src={image.url}
+                      alt={image.alt}
+                      fill
+                      className="object-cover transition-transform group-hover:scale-110"
+                    />
+                    <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-all duration-200" />
+                    
+                    {/* Image type badge */}
+                    {image.type === 'attachment' && (
+                      <div className="absolute top-1 left-1">
+                        <FileImage className="h-3 w-3 text-white" />
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+          
+      
           
           {/* Description */}
           <ProductDescription description={product.description} />
@@ -1095,7 +1217,12 @@ export default function ProductDetailContent({ slug }: ProductDetailContentProps
                               {variant.image && (
                                 <div className="relative w-12 h-12 rounded-lg overflow-hidden group cursor-pointer" onClick={(e) => {
                                   e.stopPropagation();
-                                  openImagePreview(variant.image, variant.item_name);
+                                  // Add variant image to gallery for preview if not already there
+                                  const variantImageUrl = getErpnextImageUrl(variant.image);
+                                  const existingIndex = galleryImages.findIndex(img => img.url === variantImageUrl);
+                                  if (existingIndex >= 0) {
+                                    openImagePreview(existingIndex);
+                                  }
                                 }}>
                                   <Image
                                     src={getErpnextImageUrl(variant.image)}
@@ -1304,33 +1431,114 @@ export default function ProductDetailContent({ slug }: ProductDetailContentProps
                   <span className="font-medium text-blue-600">Custom Quotation Item</span>
                 </div>
               )}
+              {product.attachments && product.attachments.length > 0 && (
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Attachments:</span>
+                  <span className="font-medium">{product.attachments.length}</span>
+                </div>
+              )}
             </CardContent>
           </Card>
         </div>
       </div>
 
-      {/* Image Preview Modal */}
-      {previewImage && (
+      {/* Enhanced Image Preview Modal with Navigation */}
+      {showImagePreview && galleryImages.length > 0 && (
         <div 
-          className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4"
+          className="fixed inset-0 bg-black bg-opacity-90 flex items-center justify-center z-50 p-4"
           onClick={closeImagePreview}
         >
-          <div className="relative max-w-4xl max-h-[90vh] w-full h-full flex items-center justify-center">
-            <button
-              onClick={closeImagePreview}
-              className="absolute top-4 right-4 z-10 bg-black bg-opacity-50 text-white rounded-full p-2 hover:bg-opacity-75 transition-all"
-            >
-              <X className="h-6 w-6" />
-            </button>
-            <div className="relative w-full h-full flex items-center justify-center">
-              <Image
-                src={previewImage}
-                alt={previewAlt}
-                width={800}
-                height={600}
-                className="max-w-full max-h-full object-contain rounded-lg"
-                onClick={(e) => e.stopPropagation()}
-              />
+          <div className="relative max-w-6xl max-h-[90vh] w-full h-full flex flex-col">
+            {/* Header */}
+            <div className="flex items-center justify-between mb-4 px-4">
+              <div className="text-white">
+                <h3 className="font-semibold">{galleryImages[currentImageIndex].alt}</h3>
+                <p className="text-sm text-gray-300">
+                  Image {currentImageIndex + 1} of {galleryImages.length}
+                </p>
+              </div>
+              <button
+                onClick={closeImagePreview}
+                className="bg-black/50 text-white rounded-full p-2 hover:bg-black/75 transition-all z-20"
+              >
+                <X className="h-6 w-6" />
+              </button>
+            </div>
+            
+            {/* Main Image Container */}
+            <div className="relative flex-1 flex items-center justify-center overflow-hidden">
+              {/* Previous Button */}
+              {galleryImages.length > 1 && (
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    prevImage();
+                  }}
+                  className="absolute left-4 z-10 bg-black/50 text-white rounded-full p-3 hover:bg-black/75 transition-all"
+                >
+                  <ChevronLeft className="h-6 w-6" />
+                </button>
+              )}
+              
+              {/* Image */}
+              <div className="relative w-full h-full flex items-center justify-center">
+                <Image
+                  src={galleryImages[currentImageIndex].url}
+                  alt={galleryImages[currentImageIndex].alt}
+                  width={800}
+                  height={600}
+                  className="max-w-full max-h-full object-contain"
+                  onClick={(e) => e.stopPropagation()}
+                />
+              </div>
+              
+              {/* Next Button */}
+              {galleryImages.length > 1 && (
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    nextImage();
+                  }}
+                  className="absolute right-4 z-10 bg-black/50 text-white rounded-full p-3 hover:bg-black/75 transition-all"
+                >
+                  <ChevronRight className="h-6 w-6" />
+                </button>
+              )}
+            </div>
+            
+            {/* Thumbnails Strip */}
+            {galleryImages.length > 1 && (
+              <div className="mt-4 px-4">
+                <div className="flex gap-2 overflow-x-auto pb-2">
+                  {galleryImages.map((image, index) => (
+                    <div
+                      key={index}
+                      className={`flex-shrink-0 w-16 h-16 rounded-md overflow-hidden cursor-pointer border-2 ${
+                        currentImageIndex === index 
+                          ? 'border-blue-500 ring-2 ring-blue-300' 
+                          : 'border-transparent hover:border-white'
+                      }`}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setCurrentImageIndex(index);
+                      }}
+                    >
+                      <Image
+                        src={image.url}
+                        alt={`Thumbnail ${index + 1}`}
+                        width={64}
+                        height={64}
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+            
+            {/* Keyboard navigation info */}
+            <div className="text-center text-gray-400 text-xs mt-2">
+              Use ← → arrow keys or click on thumbnails to navigate
             </div>
           </div>
         </div>

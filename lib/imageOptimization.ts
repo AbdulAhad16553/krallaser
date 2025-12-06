@@ -249,9 +249,12 @@ class ImageOptimizer {
       link.rel = 'preload';
       link.as = 'image';
       link.href = optimized.src;
-      link.imagesrcset = optimized.srcSet;
-      link.imagesizes = optimized.sizes;
-      
+      if (optimized.srcSet) {
+        (link as any).imageSrcset = optimized.srcSet;
+      }
+      if (optimized.sizes) {
+        (link as any).imageSizes = optimized.sizes;
+      }
       document.head.appendChild(link);
     });
   }

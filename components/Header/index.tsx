@@ -523,15 +523,41 @@ console.log("storeData", storeData,topBarPhone,topBarEmail);
 
               {/* Desktop Actions */}
               <div className="hidden md:flex items-center space-x-3">
-                <Link
-                  href="/wishlist"
-                  className="p-2 text-gray-600 hover:text-gray-900 transition-colors duration-200 relative"
-                >
-                  <Heart className="w-5 h-5" />
-                  <Badge className="absolute -top-1 -right-1 h-5 w-5 p-0 text-xs">
-                    0
-                  </Badge>
-                </Link>
+              <Link
+  href="/wishlist"
+  className="
+    relative p-2
+    text-gray-600 
+    transition-all duration-300 
+    hover:text-red-500 
+    hover:scale-110 
+    active:scale-95
+    group
+  "
+>
+  {/* Glow on Hover */}
+  <span
+    className="
+      absolute inset-0 
+      rounded-full 
+      opacity-0 group-hover:opacity-100 
+      bg-red-400/20 
+      blur-xl 
+      transition-opacity duration-300
+    "
+  ></span>
+
+  {/* Heart Icon */}
+  <Heart
+    className="
+      w-6 h-6 relative z-10 
+      transition-all duration-300
+      group-hover:fill-red-500 group-hover:text-red-600 
+      group-hover:animate-pulse
+    "
+  />
+</Link>
+
                 <Cart />
                 {storeId && companyId && (
                   <Account storeId={storeId} companyId={companyId} />

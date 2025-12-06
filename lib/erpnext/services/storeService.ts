@@ -44,9 +44,19 @@ export class StoreService {
         'website'
       ]);
 
-      if (companies.data.data && companies.data.data.length > 0) {
+      // Defensive checks, addressing possible null/unknown types
+      if (
+        companies &&
+        typeof companies === 'object' &&
+        'data' in companies &&
+        companies.data &&
+        typeof companies.data === 'object' &&
+        'data' in companies.data &&
+        Array.isArray(companies.data.data) &&
+        companies.data.data.length > 0
+      ) {
         const company = companies.data.data[0];
-        
+
         // Create a store object based on company data
         const store: ERPNextStore = {
           name: company.name,
@@ -103,8 +113,9 @@ export class StoreService {
         'country'
       ]);
 
-      if (companies.data.data && companies.data.data.length > 0) {
-        const company = companies.data.data[0];
+      const companyList = (companies as any)?.data?.data;
+      if (Array.isArray(companyList) && companyList.length > 0) {
+        const company = companyList[0];
         return {
           email: company.email,
           phone: company.phone_no,
@@ -136,8 +147,9 @@ export class StoreService {
         'company_name'
       ]);
 
-      if (companies.data.data && companies.data.data.length > 0) {
-        const company = companies.data.data[0];
+      const companyList = (companies as any)?.data?.data;
+      if (Array.isArray(companyList) && companyList.length > 0) {
+        const company = companyList[0];
         return {
           currency: company.default_currency || 'USD',
           primary_color: '#3B82F6',

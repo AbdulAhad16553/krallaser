@@ -57,10 +57,7 @@ const ShippingForm = ({
     useEffect(() => {
         if (countriesData?.countries) {
             setCountries(
-                countriesData.countries.map((country: { name: string; iso2: string }) => ({
-                    name: country.name,
-                    iso2: country.iso2,
-                }))
+                countriesData.countries.map((country: { name: string; iso2: string }) => country.name)
             );
         }
     }, [countriesData]);
@@ -154,7 +151,7 @@ const ShippingForm = ({
                             id="phoneNumber"
                             placeholder="Your Phone Number"
                             required
-                            {...register("phoneNumber", { required: true })}
+                            {...register("phone", { required: true })}
                         />
                     </div>
                 </div>

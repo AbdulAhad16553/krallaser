@@ -42,7 +42,18 @@ export class CustomerService {
   }): Promise<ERPNextCustomer[]> {
     try {
       const response = await erpnextClient.getDoc("Customer", "");
-      return response.data.data || [];
+      if (
+        response &&
+        typeof response === 'object' &&
+        'data' in response &&
+        response.data &&
+        typeof response.data === 'object' &&
+        'data' in response.data &&
+        Array.isArray((response.data as any).data)
+      ) {
+        return (response.data as { data: ERPNextCustomer[] }).data;
+      }
+      return [];
     } catch (error) {
       console.error('Error fetching customers:', error);
       throw error;
@@ -53,7 +64,16 @@ export class CustomerService {
   async getCustomer(customerName: string): Promise<ERPNextCustomer> {
     try {
       const response = await erpnextClient.getDoc('Customer', customerName);
-      return response.data;
+      if (
+        response &&
+        typeof response === 'object' &&
+        'data' in response &&
+        response.data &&
+        typeof response.data === 'object'
+      ) {
+        return response.data as ERPNextCustomer;
+      }
+      throw new Error('Invalid customer data response');
     } catch (error) {
       console.error('Error fetching customer:', error);
       throw error;
@@ -67,7 +87,18 @@ export class CustomerService {
   }): Promise<ERPNextQuotation[]> {
     try {
       const response = await erpnextClient.getQuotations(filters);
-      return response.data.data || [];
+      if (
+        response &&
+        typeof response === 'object' &&
+        'data' in response &&
+        response.data &&
+        typeof response.data === 'object' &&
+        'data' in response.data &&
+        Array.isArray((response.data as any).data)
+      ) {
+        return (response.data as { data: ERPNextQuotation[] }).data;
+      }
+      return [];
     } catch (error) {
       console.error('Error fetching quotations:', error);
       throw error;
@@ -92,7 +123,18 @@ export class CustomerService {
   }): Promise<ERPNextSalesOrder[]> {
     try {
       const response = await erpnextClient.getSalesOrders(filters);
-      return response.data.data || [];
+      if (
+        response &&
+        typeof response === 'object' &&
+        'data' in response &&
+        response.data &&
+        typeof response.data === 'object' &&
+        'data' in response.data &&
+        Array.isArray((response.data as any).data)
+      ) {
+        return (response.data as { data: ERPNextSalesOrder[] }).data;
+      }
+      return [];
     } catch (error) {
       console.error('Error fetching sales orders:', error);
       throw error;
@@ -115,7 +157,7 @@ export class CustomerService {
     try {
       const filters = {
         customer_name: `%${keyword}%`,
-        disabled: 0
+        disabled: 0 as 0
       };
       return await this.getCustomers(filters);
     } catch (error) {

@@ -141,7 +141,11 @@ class ClientCacheManager<T> {
         validCount: Object.keys(cache).length - expiredCount
       };
     } catch (error) {
-      return { size: 0, maxSize: 0, error: error.message };
+      return { 
+        size: 0, 
+        maxSize: 0, 
+        error: error instanceof Error ? error.message : String(error) 
+      };
     }
   }
 }

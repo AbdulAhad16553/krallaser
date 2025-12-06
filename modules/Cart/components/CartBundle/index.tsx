@@ -69,7 +69,7 @@ const CartBundle = ({ bundle, storeCurrency }: CartBundleProps) => {
                                     variant="ghost"
                                     size="icon"
                                     className="h-8 w-8 rounded-none"
-                                    onClick={() => { DecreamentQuantity(bundle?.id, true) }}
+                                    onClick={() => { DecreamentQuantity(bundle?.id) }}
                                     disabled={bundle.quantity <= 1}
                                 >
                                     <Minus className="h-3 w-3" />
@@ -81,7 +81,7 @@ const CartBundle = ({ bundle, storeCurrency }: CartBundleProps) => {
                                     variant="ghost"
                                     size="icon"
                                     className="h-8 w-8 rounded-none"
-                                    onClick={() => { IncreamentQuantity(bundle?.id, true) }}
+                                    onClick={() => { IncreamentQuantity(bundle?.id) }}
                                 >
                                     <Plus className="h-3 w-3" />
                                 </Button>
@@ -93,7 +93,7 @@ const CartBundle = ({ bundle, storeCurrency }: CartBundleProps) => {
                                 size="icon"
                                 className="h-8 w-8 text-destructive hover:text-destructive/90 hover:bg-destructive/10"
                                 disabled={removing}
-                                onClick={() => { RemoveFromCart(bundle?.id, true) }}
+                                onClick={() => { RemoveFromCart(bundle?.id) }}
                             >
                                 <Trash2 className="h-4 w-4" />
                             </Button>

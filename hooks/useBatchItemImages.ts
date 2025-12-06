@@ -25,7 +25,9 @@ export const useBatchItemImages = ({
   const [isLoading, setIsLoading] = useState(false);
   const [isError, setIsError] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [imageData, setImageData] = useState<Map<string, ItemImageData>>(new Map());
+  const [imageData, setImageData] =
+  useState<Map<string, ItemImageData> | Record<string, any>>(new Map());
+
   const [summary, setSummary] = useState<{
     total: number;
     successful: number;
@@ -196,7 +198,7 @@ export const useBatchItemImages = ({
       console.warn('🛡️ Defensive fix: Converting imageData to Map', { 
         currentType: typeof imageData,
         isMap: imageData instanceof Map,
-        hasGet: typeof imageData?.get === 'function'
+        hasGet: typeof (imageData as any)?.get === 'function'
       });
       const safeImageData = ensureImageDataIsMap(imageData);
       if (safeImageData !== imageData) {

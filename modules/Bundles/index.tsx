@@ -6,8 +6,6 @@ import { useState } from "react"
 import BundleItem from "./component/BundleItem"
 import { ChevronDown, ChevronUp, Package, ShoppingCart } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { useQuery } from "@apollo/client"
-import { GET_CART } from "@/graphql/cacheQueries/cartCache"
 import { AddToCart } from "@/sub/cart/addToCart"
 
 interface BundlesContainerProps {

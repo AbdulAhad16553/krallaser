@@ -12,6 +12,7 @@ interface OptimizedImage {
 }
 
 interface BatchOptimizationResult {
+  error: string;
   success: boolean;
   optimizedImages: OptimizedImage[];
   summary: {

@@ -10,8 +10,6 @@ export async function createCustomer() {
       territory: "All Territories",
       email_id: "rajaahad1010@gmail.com",
       mobile_no: "03001234567"
-      // Removed customer_primary_contact and customer_primary_address 
-      // as they require existing records in ERPNext
     };
 
     const response = await axios.post(
@@ -27,8 +25,15 @@ export async function createCustomer() {
 
     console.log("✅ Customer created:", response.data);
     return response.data;
-  } catch (error) {
-    console.error("❌ Failed to create customer:", error.response?.data || error.message);
+
+  } catch (error: unknown) {
+    if (axios.isAxiosError(error)) {
+      console.error("❌ Failed to create customer:", error.response?.data || error.message);
+    } else if (error instanceof Error) {
+      console.error("❌ Failed to create customer:", error.message);
+    } else {
+      console.error("❌ Failed to create customer: Unknown error", error);
+    }
     throw error;
   }
 }

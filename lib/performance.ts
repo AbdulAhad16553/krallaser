@@ -52,12 +52,12 @@ class PerformanceMonitor {
 
     // Track First Input Delay (FID)
     this.observeMetric('first-input', (metric: PerformanceMetric) => {
-      this.recordMetric('fid', metric.processingStart - metric.startTime);
+      this.recordMetric('fid', metric.value);
     });
 
     // Track Cumulative Layout Shift (CLS)
-    this.observeMetric('layout-shift', (metric: PerformanceMetric) => {
-      if (!metric.hadRecentInput) {
+    this.observeMetric('layout-shift', (metric: PerformanceMetric & { hadRecentInput?: boolean }) => {
+      if (!('hadRecentInput' in metric) || !metric.hadRecentInput) {
         this.recordMetric('cls', metric.value);
       }
     });
@@ -68,7 +68,7 @@ class PerformanceMonitor {
     });
 
     // Track Time to Interactive (TTI)
-    this.observeMetric('longtask', (metric: PerformanceMetric) => {
+    this.observeMetric('longtask', (metric: PerformanceEntry) => {
       this.recordMetric('tti', metric.startTime);
     });
   }
@@ -396,11 +396,13 @@ export const trackAPICall = (endpoint: string, duration: number, status: number)
   });
 };
 
+import { useState, useEffect } from "react";
+
 // React hook for performance monitoring
 export const usePerformanceMonitoring = () => {
-  const [metrics, setMetrics] = React.useState(performanceMonitor.getPerformanceSummary());
+  const [metrics, setMetrics] = useState(performanceMonitor.getPerformanceSummary());
 
-  React.useEffect(() => {
+  useEffect(() => {
     const interval = setInterval(() => {
       setMetrics(performanceMonitor.getPerformanceSummary());
     }, 5000); // Update every 5 seconds

@@ -91,6 +91,51 @@ class ERPNextClient {
   async getDoc<T>(doctype: string, name: string): Promise<ERPNextResponse<T>> {
     return this.makeRequest<T>(`${doctype}/${name}`);
   }
+// ========================================
+// 🔹 Get Quotations
+// ========================================
+async getQuotations(filters?: Record<string, any>): Promise<ERPNextResponse<any[]>> {
+  const params = new URLSearchParams();
+  
+  if (filters && Object.keys(filters).length > 0) {
+    params.append("filters", JSON.stringify(filters));
+  }
+
+  return this.makeRequest<any[]>(`Quotation?${params.toString()}`);
+}
+
+// ========================================
+// 🔹 Create Quotation
+// ========================================
+async createQuotation(data: any): Promise<ERPNextResponse<any>> {
+  return this.makeRequest<any>("Quotation", {
+    method: "POST",
+    body: JSON.stringify(data),
+  });
+}
+
+// ========================================
+// 🔹 Get Sales Orders
+// ========================================
+async getSalesOrders(filters?: Record<string, any>): Promise<ERPNextResponse<any[]>> {
+  const params = new URLSearchParams();
+  
+  if (filters && Object.keys(filters).length > 0) {
+    params.append("filters", JSON.stringify(filters));
+  }
+
+  return this.makeRequest<any[]>(`Sales Order?${params.toString()}`);
+}
+
+// ========================================
+// 🔹 Create Sales Order
+// ========================================
+async createSalesOrder(data: any): Promise<ERPNextResponse<any>> {
+  return this.makeRequest<any>("Sales Order", {
+    method: "POST",
+    body: JSON.stringify(data),
+  });
+}
 
   // ========================================
   // 🔹 Get All Item Groups (Categories)
@@ -273,7 +318,25 @@ class ERPNextClient {
       100
     );
   }
-
+  async getItemAttachments(itemCode: string): Promise<ERPNextResponse<any[]>> {
+    try {
+      const params = new URLSearchParams();
+      params.append("fields", JSON.stringify(["name", "file_name", "file_url", "attached_to_name", "is_private"]));
+      params.append(
+        "filters",
+        JSON.stringify([
+          ["attached_to_doctype", "=", "Item"],
+          ["attached_to_name", "=", itemCode]
+        ])
+      );
+  
+      return this.makeRequest<any[]>(`File?${params.toString()}`);
+    } catch (error: any) {
+      console.error("❌ Error fetching attachments:", error.message);
+      return { data: [], message: error.message, status: 500 };
+    }
+  }
+  
   // ========================================
   // 🔹 Fetch Full Product Details (Single Product or Template with Variants)
   // ========================================
