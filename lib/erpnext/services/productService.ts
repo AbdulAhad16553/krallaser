@@ -16,6 +16,7 @@ export interface ERPNextProduct {
   is_sales_item: 0 | 1;
   is_purchase_item: 0 | 1;
   is_stock_item: 0 | 1;
+  custom_is_website_item?: 0 | 1;
   country_of_origin?: string;
   weight_per_unit?: number;
   shelf_life_in_days?: number;
@@ -37,6 +38,7 @@ export interface ERPNextItemGroup {
   parent_item_group?: string;
   is_group: 0 | 1;
   image?: string;
+  custom__is_website_item?: 0 | 1;
 }
 
 export interface ERPNextStockBalance {
@@ -66,7 +68,9 @@ export class ProductService {
     try {
       // Get all items (both templates and single items) using getDetailedProducts
       const response = await erpnextClient.getDetailedProducts();
-      const allItems = response.data || [];
+      const allItems = (response.data || []).filter(
+        (item: any) => Number(item.custom_is_website_item) !== 1
+      );
       
       console.log('🔍 ProductService - All items from getDetailedProducts:', allItems.length, 'items');
       

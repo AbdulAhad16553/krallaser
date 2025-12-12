@@ -43,6 +43,11 @@ const nextConfig: NextConfig = {
         hostname: "erp.krallaser.com",
         pathname: "/**",
       },
+      {
+        protocol: "https",
+        hostname: "erp.cnckral.com",
+        pathname: "/**",
+      },
     ],
     dangerouslyAllowSVG: true,
     formats: ["image/webp", "image/avif"],

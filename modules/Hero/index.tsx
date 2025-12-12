@@ -16,6 +16,7 @@ import {
   getEffectivePrice,
   hasDiscount,
   formatPrice,
+  getBasePriceForDisplay,
 } from "@/lib/currencyUtils";
 
 interface HeroProps {
@@ -254,10 +255,11 @@ const Hero = async ({
                     {/* Price badge */}
                     <div className="absolute top-4 right-4 bg-gray-800/90 backdrop-blur-sm rounded-full px-4 py-2 shadow-lg">
                       <div className="text-base font-bold text-white">
-                          {formatPrice(
+                        {formatPrice(
+                          getBasePriceForDisplay(featuredProduct) ||
                             getEffectivePrice(featuredProduct),
-                            currency
-                          )}
+                          currency
+                        )}
                       </div>
                     </div>
                   </div>

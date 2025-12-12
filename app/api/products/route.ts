@@ -152,6 +152,18 @@ export async function GET(request: NextRequest) {
           priceRange = { min: minPrice, max: maxPrice };
           displayPrice = minPrice; // Use minimum price as the main display price
         }
+
+        // Fallback: if no price range yet but a variation has price, use it
+        if (!priceRange) {
+          const pricedVariation = variations.find(
+            (v: any) => Number(v.sale_price || v.base_price || 0) > 0
+          );
+          if (pricedVariation) {
+            const fallbackPrice = Number(pricedVariation.sale_price || pricedVariation.base_price || 0);
+            displayPrice = fallbackPrice;
+            priceRange = { min: fallbackPrice, max: fallbackPrice };
+          }
+        }
       }
 
       return {

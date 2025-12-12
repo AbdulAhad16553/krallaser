@@ -18,7 +18,7 @@ export default async function CartPage() {
     const response = await fetch(`${fullStoreUrl}/api/fetchStore`);
     const data = await response.json();
 
-    // console.log("data", data)
+    const store = data?.store?.stores?.[0];
     const storeCurrency = data?.store?.stores[0].store_detail?.currency ? data?.store?.stores[0].store_detail?.currency : "Rs.";
 
 
@@ -30,7 +30,13 @@ export default async function CartPage() {
                     <div className="md:col-span-2">
                         <Cart storeCurrency={storeCurrency} />
                     </div>
-                    <OrderSummary storeCurrency={storeCurrency} />
+                    <OrderSummary
+                        storeCurrency={storeCurrency}
+                        necessary={{
+                            companyId: store?.company_id,
+                            storeId: store?.id
+                        }}
+                    />
                 </div>
             </div>
         </Layout>

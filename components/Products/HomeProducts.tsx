@@ -27,6 +27,7 @@ interface HomeProductsProps {
   currentStock?: any[];
   storeCurrency: string;
   className?: string;
+  initialProducts?: any[];
 }
 
 // Home Products Skeleton
@@ -57,11 +58,12 @@ const HomeProducts: React.FC<HomeProductsProps> = ({
   storeId,
   currentStock = [],
   storeCurrency,
-  className = ""
+  className = "",
+  initialProducts = []
 }) => {
   const router = useRouter();
-  const [products, setProducts] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [products, setProducts] = useState<any[]>(initialProducts || []);
+  const [loading, setLoading] = useState(!(initialProducts && initialProducts.length > 0));
   const [error, setError] = useState<string | null>(null);
   const [cartDialogOpen, setCartDialogOpen] = useState(false);
   const [selectedProductImage, setSelectedProductImage] = useState<any>(null);
@@ -79,13 +81,17 @@ const HomeProducts: React.FC<HomeProductsProps> = ({
 
   // Fetch products on component mount
   useEffect(() => {
+    let isCancelled = false;
     const fetchProducts = async () => {
       try {
-        setLoading(true);
+        // If we already have server-provided products, don't flash loading skeleton
+        if (!products.length) {
+          setLoading(true);
+        }
         setError(null);
 
         console.log('🔄 Fetching 8 products for home page...');
-        
+
         const response = await fetch(`/api/products?page=1&limit=8`);
         const data = await response.json();
 
@@ -95,16 +101,28 @@ const HomeProducts: React.FC<HomeProductsProps> = ({
 
         console.log(`✅ Loaded ${data.products.length} products for home page`);
         // Ensure we only keep 8 items even if API returns more
-        setProducts((data.products || []).slice(0, 8));
+        if (!isCancelled) {
+          setProducts((data.products || []).slice(0, 8));
+        }
       } catch (err) {
         console.error('Error loading products:', err);
-        setError(err instanceof Error ? err.message : 'Failed to load products');
+        // Only surface the error if we have no fallback data
+        if (!products.length) {
+          setError(err instanceof Error ? err.message : 'Failed to load products');
+        } else {
+          console.warn('Using initial products fallback for home page');
+        }
       } finally {
-        setLoading(false);
+        if (!isCancelled) {
+          setLoading(false);
+        }
       }
     };
 
     fetchProducts();
+    return () => {
+      isCancelled = true;
+    };
   }, []);
 
   // Calculate product stock

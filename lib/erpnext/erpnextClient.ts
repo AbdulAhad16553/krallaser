@@ -145,7 +145,7 @@ async createSalesOrder(data: any): Promise<ERPNextResponse<any>> {
       const { data } = await this.getList<any>(
         "Item Group",
         {},
-        ["name", "item_group_name", "parent_item_group", "is_group", "image"],
+        ["name", "item_group_name", "parent_item_group", "is_group", "image", "custom__is_website_item"],
         1000
       );
 
@@ -177,6 +177,7 @@ async createSalesOrder(data: any): Promise<ERPNextResponse<any>> {
         "attributes",
         "disabled",
         "standard_rate",
+        "custom_is_website_item",
         ],
         1000
       );
@@ -190,9 +191,14 @@ async createSalesOrder(data: any): Promise<ERPNextResponse<any>> {
         return map;
       }, {});
 
+      // Filter out items flagged as website-only hidden
+      const visibleItems = (items || []).filter(
+        (item: any) => Number(item.custom_is_website_item) !== 1
+      );
+
       // 3️⃣ Process all items
       const detailedItems = await Promise.all(
-        items.map(async (item) => {
+        visibleItems.map(async (item) => {
           const groupInfo = groupMap[item.item_group] || {};
 
           if (item.has_variants) {
@@ -208,12 +214,15 @@ async createSalesOrder(data: any): Promise<ERPNextResponse<any>> {
                 "description",
                 "attributes",
                 "standard_rate",
+              "custom_is_website_item",
               ],
               500
             );
 
             // Add prices to variants using standard_rate
-            const variantsWithPrices = (variants || []).map((variant) => {
+            const variantsWithPrices = (variants || [])
+              .filter((variant) => Number(variant.custom_is_website_item) !== 1)
+              .map((variant) => {
               return {
                 ...variant,
                 price: variant.standard_rate || null,

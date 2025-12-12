@@ -7,6 +7,7 @@ export interface Category {
   image_id?: string;
   featured: boolean;
   parent_id?: string;
+  custom__is_website_item?: number;
 }
 
 export const getCategories = async (storeId: string) => {
@@ -16,6 +17,7 @@ export const getCategories = async (storeId: string) => {
     
     // Transform ERPNext categories to match our interface
     const categories: Category[] = erpnextCategories
+      .filter(category => Number(category.custom__is_website_item) !== 1)
       .filter(category => !category.is_group) // Only get leaf categories
       .map(category => ({
         id: category.name,
@@ -39,14 +41,16 @@ export const getAllCategories = async (storeId: string) => {
     const erpnextCategories = await productService.getCategories();
     
     // Transform ERPNext categories to match our interface
-    const categories: Category[] = erpnextCategories.map(category => ({
-      id: category.name,
-      name: category.item_group_name,
-      slug: category.name.toLowerCase().replace(/\s+/g, '-'),
-      image_id: category.image,
-      featured: false,
-      parent_id: category.parent_item_group
-    }));
+    const categories: Category[] = erpnextCategories
+      .filter(category => Number(category.custom__is_website_item) !== 1)
+      .map(category => ({
+        id: category.name,
+        name: category.item_group_name,
+        slug: category.name.toLowerCase().replace(/\s+/g, '-'),
+        image_id: category.image,
+        featured: false,
+        parent_id: category.parent_item_group
+      }));
 
     return { categories };
   } catch (error) {
