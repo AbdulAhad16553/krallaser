@@ -16,38 +16,78 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Fetch variant items for the template
-    const variantsResponse = await fetch(
-      `${ERP_BASE_URL}/Item?filters=[["variant_of","=","${templateItemName}"]]&fields=["name","item_name","attributes.attribute","attributes.attribute_value"]&limit_page_length=100`,
-      {
-        headers: {
-          Authorization: `token ${API_KEY}:${API_SECRET}`,
-          'Content-Type': 'application/json',
-        },
-      }
-    );
+    // Fetch all variant items for the template with pagination support
+    // ERPNext returns each attribute as a separate row, so we need to fetch all pages
+    let allVariants: any[] = [];
+    let start = 0;
+    const pageLength = 1000; // Increased limit to ensure we get all variants
+    let hasMore = true;
 
-    if (!variantsResponse.ok) {
-      throw new Error(`ERPNext API error: ${variantsResponse.status}`);
+    while (hasMore) {
+      const variantsResponse = await fetch(
+        `${ERP_BASE_URL}/Item?filters=[["variant_of","=","${templateItemName}"]]&fields=["name","item_name","attributes.attribute","attributes.attribute_value"]&limit_start=${start}&limit_page_length=${pageLength}`,
+        {
+          headers: {
+            Authorization: `token ${API_KEY}:${API_SECRET}`,
+            'Content-Type': 'application/json',
+          },
+        }
+      );
+
+      if (!variantsResponse.ok) {
+        throw new Error(`ERPNext API error: ${variantsResponse.status}`);
+      }
+
+      const variantsData = await variantsResponse.json();
+      const variants = variantsData.data || [];
+      
+      if (variants.length === 0) {
+        hasMore = false;
+      } else {
+        allVariants = allVariants.concat(variants);
+        // If we got fewer results than requested, we've reached the end
+        if (variants.length < pageLength) {
+          hasMore = false;
+        } else {
+          start += pageLength;
+        }
+      }
     }
 
-    const variantsData = await variantsResponse.json();
-    const variants = variantsData.data || [];
-
-    if (variants.length === 0) {
+    if (allVariants.length === 0) {
       return NextResponse.json({ attributes: [] });
     }
 
     // Extract unique attributes and their values
+    // ERPNext returns each attribute as a separate row when requesting attributes.attribute
     const attributeMap = new Map<string, Set<string>>();
     
-    variants.forEach((variant: any) => {
-      // Handle the new response format where attributes are individual fields
+    allVariants.forEach((variant: any) => {
+      // Handle ERPNext response format where attributes are returned as flat fields
+      // Each row represents one attribute of a variant
       if (variant.attribute && variant.attribute_value) {
-        if (!attributeMap.has(variant.attribute)) {
-          attributeMap.set(variant.attribute, new Set());
+        const attributeName = variant.attribute;
+        const attributeValue = variant.attribute_value;
+        
+        if (!attributeMap.has(attributeName)) {
+          attributeMap.set(attributeName, new Set());
         }
-        attributeMap.get(variant.attribute)!.add(variant.attribute_value);
+        attributeMap.get(attributeName)!.add(attributeValue);
+      }
+      
+      // Also handle case where attributes might be in an array format
+      if (variant.attributes && Array.isArray(variant.attributes)) {
+        variant.attributes.forEach((attr: any) => {
+          if (attr.attribute && attr.attribute_value) {
+            const attributeName = attr.attribute;
+            const attributeValue = attr.attribute_value;
+            
+            if (!attributeMap.has(attributeName)) {
+              attributeMap.set(attributeName, new Set());
+            }
+            attributeMap.get(attributeName)!.add(attributeValue);
+          }
+        });
       }
     });
 
@@ -57,6 +97,14 @@ export async function GET(request: NextRequest) {
       values.forEach(value => {
         attributes.push({ attribute, attribute_value: value });
       });
+    });
+
+    // Sort attributes by name and values for consistent display
+    attributes.sort((a, b) => {
+      if (a.attribute !== b.attribute) {
+        return a.attribute.localeCompare(b.attribute);
+      }
+      return a.attribute_value.localeCompare(b.attribute_value);
     });
 
     return NextResponse.json({ attributes });

@@ -326,15 +326,22 @@ export default function ProductDetailContent({ slug }: ProductDetailContentProps
   return (
     <div className="max-w-6xl mx-auto">
       {/* Back Button */}
-      <Button 
+      {/* <Button 
         onClick={() => router.back()} 
         variant="outline" 
         className="mb-6"
       >
         <ArrowLeft className="h-4 w-4 mr-2" />
         Back to Products
+      </Button> */}
+      <Button 
+        onClick={() => console.log(product)} 
+        variant="outline" 
+        className="mb-6"
+      >
+        <ArrowLeft className="h-4 w-4 mr-2" />
+        BProducts
       </Button>
-  
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         {/* Product Images */}
         <div className="space-y-6">

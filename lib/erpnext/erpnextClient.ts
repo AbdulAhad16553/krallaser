@@ -366,6 +366,8 @@ async createSalesOrder(data: any): Promise<ERPNextResponse<any>> {
 
       let variants = [];
       if (item.has_variants) {
+        // Fetch all variants - ERPNext returns each attribute as a separate row
+        // So we need a higher limit to ensure we get all variants with all their attributes
         const { data: variantList } = await this.getList<any>(
           "Item",
           { variant_of: item.name },
@@ -378,7 +380,7 @@ async createSalesOrder(data: any): Promise<ERPNextResponse<any>> {
             "description",
             "stock_uom",
           ],
-          200
+          1000 // Increased limit to ensure all variants are fetched
         );
 
         // Group variants by name since ERPNext returns each attribute as separate entry
