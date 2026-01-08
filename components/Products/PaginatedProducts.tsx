@@ -299,9 +299,9 @@ const PaginatedProducts: React.FC<PaginatedProductsProps> = ({
       <div className={className}>
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-2xl font-bold">Products</h2>
-          <div className="text-sm text-gray-600">
+          {/* <div className="text-sm text-gray-600">
             Loading images... {Math.round(imageLoadingProgress)}%
-          </div>
+          </div> */}
         </div>
         <div className="space-y-4">
           <div className="w-full bg-gray-200 rounded-full h-2">

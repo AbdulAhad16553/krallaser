@@ -314,18 +314,6 @@ const EnhancedShopContent: React.FC<EnhancedShopContentProps> = ({
                   </Button>
                 )}
               </div>
-
-              <Separator />
-
-              {/* Quick Stats */}
-              <div>
-                <h4 className="font-medium mb-2">Quick Stats</h4>
-                <div className="space-y-1 text-sm text-gray-600">
-                  <div>• Progressive image loading</div>
-                  <div>• Smart caching enabled</div>
-                  <div>• Optimized for speed</div>
-                </div>
-              </div>
             </CardContent>
           </Card>
         </div>
