@@ -32,10 +32,11 @@ const EnhancedShopContent: React.FC<EnhancedShopContentProps> = ({
   const [paginationMode, setPaginationMode] = useState<'pagination' | 'infinite' | 'load-more'>('pagination');
   const [pageSize, setPageSize] = useState(1000); // Load all products
   const [searchTerm, setSearchTerm] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState<string>('');
+  const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [priceRange, setPriceRange] = useState<{ min: number; max: number } | null>(null);
-  const [sortBy, setSortBy] = useState('newest');
+  const [sortBy, setSortBy] = useState<'newest' | 'oldest' | 'price-low' | 'price-high' | 'name' | 'name-desc'>('newest');
   const [showFilters, setShowFilters] = useState(false);
+  const [showAllCategories, setShowAllCategories] = useState(false);
 
   // Debounced search
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
@@ -54,9 +55,15 @@ const EnhancedShopContent: React.FC<EnhancedShopContentProps> = ({
 
   const clearFilters = () => {
     setSearchTerm('');
-    setSelectedCategory('');
+    setSelectedCategory('all');
     setPriceRange(null);
     setSortBy('newest');
+  };
+
+  const handleSortChange = (value: string) => {
+    setSortBy(
+      value as 'newest' | 'oldest' | 'price-low' | 'price-high' | 'name' | 'name-desc'
+    );
   };
 
   const activeFiltersCount = [
@@ -76,6 +83,21 @@ const EnhancedShopContent: React.FC<EnhancedShopContentProps> = ({
         </div>
         
         <div className="flex items-center gap-4">
+          {/* Quick Category Dropdown */}
+          <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+            <SelectTrigger className="w-52">
+              <SelectValue placeholder="All categories" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Categories</SelectItem>
+              {categories.map((category) => (
+                <SelectItem key={category.id} value={category.id}>
+                  {category.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+
           {/* Search */}
           <div className="relative">
             <Input
@@ -168,7 +190,7 @@ const EnhancedShopContent: React.FC<EnhancedShopContentProps> = ({
               {/* Sort By */}
               <div>
                 <label className="text-sm font-medium mb-2 block">Sort By</label>
-                <Select value={sortBy} onValueChange={setSortBy}>
+                <Select value={sortBy} onValueChange={handleSortChange}>
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
@@ -191,7 +213,7 @@ const EnhancedShopContent: React.FC<EnhancedShopContentProps> = ({
                     <SelectValue placeholder="All Categories" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">All Categories</SelectItem>
+                    <SelectItem value="all">All Categories</SelectItem>
                     {categories.map((category) => (
                       <SelectItem key={category.id} value={category.id}>
                         {category.name}
@@ -262,14 +284,14 @@ const EnhancedShopContent: React.FC<EnhancedShopContentProps> = ({
                 <h4 className="font-medium mb-2">Categories</h4>
                 <div className="space-y-2">
                   <Button
-                    variant={selectedCategory === '' ? 'default' : 'ghost'}
+                    variant={selectedCategory === 'all' ? 'default' : 'ghost'}
                     size="sm"
-                    onClick={() => setSelectedCategory('')}
+                    onClick={() => setSelectedCategory('all')}
                     className="w-full justify-start"
                   >
                     All Categories
                   </Button>
-                  {categories.slice(0, 10).map((category) => (
+                  {(showAllCategories ? categories : categories.slice(0, 12)).map((category) => (
                     <Button
                       key={category.id}
                       variant={selectedCategory === category.id ? 'default' : 'ghost'}
@@ -281,6 +303,16 @@ const EnhancedShopContent: React.FC<EnhancedShopContentProps> = ({
                     </Button>
                   ))}
                 </div>
+                {categories.length > 12 && (
+                  <Button
+                    variant="link"
+                    size="sm"
+                    className="mt-2 px-0"
+                    onClick={() => setShowAllCategories((prev) => !prev)}
+                  >
+                    {showAllCategories ? "Show fewer categories" : `Show all categories (${categories.length})`}
+                  </Button>
+                )}
               </div>
 
               <Separator />
@@ -307,6 +339,9 @@ const EnhancedShopContent: React.FC<EnhancedShopContentProps> = ({
             viewMode={viewMode}
             paginationMode={paginationMode}
             pageSize={pageSize}
+            selectedCategory={selectedCategory}
+            searchTerm={debouncedSearchTerm}
+            sortBy={sortBy}
             className="w-full"
           />
         </div>

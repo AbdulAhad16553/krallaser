@@ -171,6 +171,7 @@ export async function GET(request: NextRequest) {
         name: product.item_name,
         short_description: product.description,
         detailed_desc: product.description,
+        item_group: product.item_group,
         type: product.has_variants ? 'variable' : 'simple',
         currency: currency,
         base_price: displayPrice,

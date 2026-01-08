@@ -32,6 +32,9 @@ interface PaginatedProductsProps {
   paginationMode?: "pagination" | "infinite" | "load-more";
   pageSize?: number;
   className?: string;
+  selectedCategory?: string;
+  searchTerm?: string;
+  sortBy?: "newest" | "oldest" | "price-low" | "price-high" | "name" | "name-desc";
 }
 
 // Enhanced Product Skeleton
@@ -88,7 +91,10 @@ const PaginatedProducts: React.FC<PaginatedProductsProps> = ({
   viewMode = "grid",
   paginationMode = "pagination",
   pageSize = 12,
-  className = ""
+  className = "",
+  selectedCategory = "all",
+  searchTerm = "",
+  sortBy = "newest"
 }) => {
   const router = useRouter();
   const [cartDialogOpen, setCartDialogOpen] = useState(false);
@@ -118,6 +124,55 @@ const PaginatedProducts: React.FC<PaginatedProductsProps> = ({
     hasMore,
     isLoadingMore
   } = paginatedProducts;
+
+  // Apply category/search/sort filters
+  const visibleProducts = React.useMemo(() => {
+    const normalizedSearch = searchTerm.trim().toLowerCase();
+
+    // Filter by category and search
+    let filtered = products.filter((product) => {
+      const matchesCategory = selectedCategory && selectedCategory !== "all" ? product.item_group === selectedCategory : true;
+      const matchesSearch = normalizedSearch
+        ? (product.name?.toLowerCase().includes(normalizedSearch) ||
+          product.short_description?.toLowerCase().includes(normalizedSearch) ||
+          product.sku?.toLowerCase().includes(normalizedSearch))
+        : true;
+      return matchesCategory && matchesSearch;
+    });
+
+    // Remove duplicates based on stable key
+    filtered = filtered.filter((product: any, index: number, array: any[]) => {
+      const productKey = `${product.id || product.sku || product.name}`;
+      const firstIndex = array.findIndex(
+        (p: any) => `${p.id || p.sku || p.name}` === productKey
+      );
+      return firstIndex === index;
+    });
+
+    // Sort
+    const sorted = [...filtered];
+    switch (sortBy) {
+      case "price-low":
+        sorted.sort((a, b) => (a.sale_price || a.base_price || 0) - (b.sale_price || b.base_price || 0));
+        break;
+      case "price-high":
+        sorted.sort((a, b) => (b.sale_price || b.base_price || 0) - (a.sale_price || a.base_price || 0));
+        break;
+      case "name":
+        sorted.sort((a, b) => (a.name || "").localeCompare(b.name || ""));
+        break;
+      case "name-desc":
+        sorted.sort((a, b) => (b.name || "").localeCompare(a.name || ""));
+        break;
+      case "oldest":
+        sorted.reverse(); // API returns newest first, so reverse for oldest
+        break;
+      default:
+        break;
+    }
+
+    return sorted;
+  }, [products, selectedCategory, searchTerm, sortBy]);
 
   // Extract image IDs for batch optimization
   const imageIds = React.useMemo(() => {
@@ -305,7 +360,7 @@ const PaginatedProducts: React.FC<PaginatedProductsProps> = ({
         <div>
           <h2 className="text-2xl font-bold">Products</h2>
           <p className="text-sm text-gray-600 mt-1">
-            Showing all {products.length} products
+            Showing {visibleProducts.length} product{visibleProducts.length === 1 ? "" : "s"}
           </p>
         </div>
       </div>
@@ -318,15 +373,7 @@ const PaginatedProducts: React.FC<PaginatedProductsProps> = ({
             : "space-y-4"
         }
       >
-        {products
-          .filter((product: any, index: number, array: any[]) => {
-            // Remove duplicates based on a combination of identifiers
-            const productKey = `${product.id || product.sku || product.name}`;
-            const firstIndex = array.findIndex(p => 
-              `${p.id || p.sku || p.name}` === productKey
-            );
-            return firstIndex === index;
-          })
+        {visibleProducts
           .map((product: any, index: number) => {
             // All products are loaded at once, so all images get priority
             const isFirstPage = true;
