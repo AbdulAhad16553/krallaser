@@ -484,13 +484,13 @@ export default function ProductDetailContent({ slug }: ProductDetailContentProps
                   </Button>
                 </div>
                 
-                <Button 
+                {/* <Button 
                   onClick={handleSimpleProductAddToCart}
                   className="flex-1 bg-green-600 hover:bg-green-700 text-white"
                 >
                   <ShoppingCart className="mr-2 h-4 w-4" />
                   Add to Cart
-                </Button>
+                </Button> */}
               </div>
               
               <div className="text-sm text-gray-600">
