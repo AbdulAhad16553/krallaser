@@ -118,17 +118,7 @@ const RelatedProducts = ({
                     </Button>
                   </div>
 
-                  {/* Quick Add to Cart */}
-                  <div className="absolute bottom-2 left-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <Button
-                      size="sm"
-                      className="w-full text-white font-medium"
-                      style={{ backgroundColor: primaryColor }}
-                    >
-                      <ShoppingCart className="h-4 w-4 mr-1" />
-                      Quick Add
-                    </Button>
-                  </div>
+                  {/* Bottom overlay reserved for future actions (Quick Add removed) */}
                 </div>
 
                 {/* Product Info */}

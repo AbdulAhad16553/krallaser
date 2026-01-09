@@ -15,8 +15,6 @@ import {
 } from "@/lib/currencyUtils";
 import { Badge } from "@/components/ui/badge";
 import { ShoppingCart, Heart, Eye, Star } from "lucide-react";
-import { AddToCart } from "@/sub/cart/addToCart";
-import { CartAnimationDialog } from "@/common/CartAnimationDialog";
 import ProductImagePreview from "@/components/ProductImagePreview";
 import { useBatchItemImages } from "@/hooks/useBatchItemImages";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -65,8 +63,6 @@ const HomeProducts: React.FC<HomeProductsProps> = ({
   const [products, setProducts] = useState<any[]>(initialProducts || []);
   const [loading, setLoading] = useState(!(initialProducts && initialProducts.length > 0));
   const [error, setError] = useState<string | null>(null);
-  const [cartDialogOpen, setCartDialogOpen] = useState(false);
-  const [selectedProductImage, setSelectedProductImage] = useState<any>(null);
 
   // Prepare batch image loading like /shop
   const itemNames = React.useMemo(() => products.map(p => p.sku).filter(Boolean), [products]);
@@ -147,27 +143,6 @@ const HomeProducts: React.FC<HomeProductsProps> = ({
       return currentStock
         .filter((stock: any) => stock.sku === product.sku)
         .reduce((sum: number, stock: any) => sum + (stock?.available_quantity || 0), 0);
-    }
-  };
-
-  // Handle quick add to cart
-  const handleQuickAdd = (product: any) => {
-    const productStock = calculateProductStock(product);
-    
-    if (productStock > 0) {
-      const result = AddToCart(product, 1);
-      
-      if (result.success) {
-        const featuredImage = product?.product_images?.find(
-          (image: any) => image.position === "featured"
-        );
-        setSelectedProductImage(featuredImage);
-        setCartDialogOpen(true);
-        
-        setTimeout(() => {
-          setCartDialogOpen(false);
-        }, 2000);
-      }
     }
   };
 
@@ -329,22 +304,7 @@ const HomeProducts: React.FC<HomeProductsProps> = ({
                     </Button>
                   </div>
 
-                  {/* Quick Add to Cart */}
-                  {!hasVariations && (
-                    <div className="absolute bottom-2 left-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                      <Button
-                        size="sm"
-                        className="w-full text-white font-medium"
-                        disabled={isOutOfStock && !product.enable_quote_request}
-                        onClick={() => handleQuickAdd(product)}
-                      >
-                        <ShoppingCart className="h-4 w-4 mr-1" />
-                        {isOutOfStock && !product.enable_quote_request
-                          ? "Out of Stock"
-                          : "Quick Add"}
-                      </Button>
-                    </div>
-                  )}
+                  {/* Bottom overlay reserved for future actions (Quick Add removed) */}
                 </div>
 
                 {/* Product Info */}
@@ -472,12 +432,6 @@ const HomeProducts: React.FC<HomeProductsProps> = ({
         </Link>
       </div>
       
-      {/* Cart Animation Dialog */}
-      <CartAnimationDialog
-        isOpen={cartDialogOpen}
-        onOpenChange={setCartDialogOpen}
-        productImageSrc={selectedProductImage}
-      />
     </div>
   );
 };

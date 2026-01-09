@@ -443,19 +443,17 @@ export function ProductSkeleton() {
             <div key={product} className="border rounded-lg overflow-hidden">
               {/* Product Image */}
               <div className="relative aspect-square">
+                {/* Main image placeholder */}
                 <Skeleton className="h-full w-full" />
                 {/* Badges */}
                 <div className="absolute top-2 left-2 flex flex-col gap-1">
-                  <Skeleton className="h-5 w-12 rounded-full" />
+                  <Skeleton className="h-5 w-16 rounded-full" />
+                  <Skeleton className="h-5 w-20 rounded-full" />
                 </div>
                 {/* Quick Actions */}
                 <div className="absolute top-2 right-2 flex flex-col gap-1">
                   <Skeleton className="h-8 w-8 rounded-md" />
                   <Skeleton className="h-8 w-8 rounded-md" />
-                </div>
-                {/* Quick Add Button */}
-                <div className="absolute bottom-2 left-2 right-2">
-                  <Skeleton className="h-8 w-full rounded-md" />
                 </div>
               </div>
 

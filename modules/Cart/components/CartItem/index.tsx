@@ -1,6 +1,5 @@
 "use client"
 
-import Image from "next/image"
 import Link from "next/link"
 import { Trash2, Minus, Plus } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
@@ -25,7 +24,6 @@ const CartItem = ({
     const getProductDetails = (item: any) => {
         return {
             name: item?.name || "Unknown Product",
-            imageId: item?.image?.image_id || item?.image,
             basePrice: item?.basePrice || 0,
             salePrice: item?.salePrice || item?.price || 0,
             sku: item?.sku || "N/A",
@@ -33,41 +31,13 @@ const CartItem = ({
         };
     };
 
-    const getImageSrc = (item: any) => {
-        const details = getProductDetails(item);
-        const storageUrl = process.env.NEXT_PUBLIC_NHOST_STORAGE_URL;
-        
-        // Ensure imageId is a string
-        const imageId = details.imageId;
-        
-        // If we have a valid storage URL and image ID, use it
-        if (storageUrl && imageId && typeof imageId === 'string') {
-            return `${storageUrl}/files/${imageId}?w=160&h=160`;
-        }
-        
-        // If we have a direct image URL, use it
-        if (imageId && typeof imageId === 'string' && (imageId.startsWith('http') || imageId.startsWith('/'))) {
-            return imageId;
-        }
-        
-        // Fallback to placeholder
-        return "/placeholder.svg";
-    };
+  
 
     return (
         <div
             className={`flex flex-col sm:flex-row items-start gap-4 p-4 rounded-md ${showBundleInfo ? "bg-muted/30" : "border"}`}
         >
-            {/* Image */}
-            <div className="relative w-20 h-20 overflow-hidden rounded-md shrink-0 mx-auto sm:mx-0">
-                <Image
-                    src={getImageSrc(item)}
-                    alt={getProductDetails(item).name}
-                    fill
-                    className="object-cover"
-                    sizes="80px"
-                />
-            </div>
+            
 
             {/* Product Details */}
             <div className="flex-1 min-w-0 w-full sm:w-auto flex flex-col gap-2">

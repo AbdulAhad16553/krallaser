@@ -1,9 +1,21 @@
 import { productService } from '@/lib/erpnext/services/productService';
+import { getAllCategories } from '@/hooks/getCategories';
 
 export const getCatProducts = async (storeId: string, catSlug: string) => {
     try {
-        // Get products by category from ERPNext
-        const products = await productService.getProductsByCategory(catSlug);
+        // First, get all categories to find the one matching the slug
+        const { categories } = await getAllCategories(storeId);
+        const matchingCategory = categories.find(
+            cat => cat.slug === catSlug || cat.slug === decodeURIComponent(catSlug)
+        );
+        
+        // Use the actual category name/id (not slug) to fetch products
+        // If no match found, try using the slug directly (in case it's already the category name)
+        const categoryName = matchingCategory ? matchingCategory.id : catSlug;
+        const categoryDisplayName = matchingCategory ? matchingCategory.name : catSlug;
+        
+        // Get products by category from ERPNext using the actual category name
+        const products = await productService.getProductsByCategory(categoryName);
         const stockData = await productService.getStockBalance();
         
         // Transform ERPNext products to match expected format
@@ -44,10 +56,15 @@ export const getCatProducts = async (storeId: string, catSlug: string) => {
             }
         }));
 
+        // Get subcategories if they exist
+        const subCategories = matchingCategory 
+            ? categories.filter(cat => cat.parent_id === matchingCategory.id)
+            : [];
+
         return {
-            catName: catSlug,
+            catName: categoryDisplayName,
             catProducts,
-            catSubCats: [], // ERPNext doesn't have sub-categories in the same way
+            catSubCats: subCategories, // Return subcategories if they exist
             currentStock,
         };
     } catch (error) {

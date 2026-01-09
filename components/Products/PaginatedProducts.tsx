@@ -19,8 +19,6 @@ import {
 } from "@/lib/currencyUtils";
 import { Badge } from "@/components/ui/badge";
 import { ShoppingCart, Heart, Eye, Star } from "lucide-react";
-import { AddToCart } from "@/sub/cart/addToCart";
-import { CartAnimationDialog } from "@/common/CartAnimationDialog";
 import { Skeleton } from "@/components/ui/skeleton";
 
 interface PaginatedProductsProps {
@@ -97,8 +95,6 @@ const PaginatedProducts: React.FC<PaginatedProductsProps> = ({
   sortBy = "newest"
 }) => {
   const router = useRouter();
-  const [cartDialogOpen, setCartDialogOpen] = useState(false);
-  const [selectedProductImage, setSelectedProductImage] = useState<any>(null);
   const [performanceMetrics, setPerformanceMetrics] = useState({
     totalImages: 0,
     cachedImages: 0,
@@ -246,27 +242,6 @@ const PaginatedProducts: React.FC<PaginatedProductsProps> = ({
     }
   };
 
-  // Handle quick add to cart
-  const handleQuickAdd = (product: any) => {
-    const productStock = calculateProductStock(product);
-    
-    if (productStock > 0) {
-      const result = AddToCart(product, 1);
-      
-      if (result.success) {
-        const featuredImage = product?.product_images?.find(
-          (image: any) => image.position === "featured"
-        );
-        setSelectedProductImage(featuredImage);
-        setCartDialogOpen(true);
-        
-        setTimeout(() => {
-          setCartDialogOpen(false);
-        }, 2000);
-      }
-    }
-  };
-
   // Debug: Check for duplicate products
   React.useEffect(() => {
     if (process.env.NODE_ENV === 'development' && products.length > 0) {
@@ -289,29 +264,6 @@ const PaginatedProducts: React.FC<PaginatedProductsProps> = ({
           <h2 className="text-2xl font-bold">Products</h2>
         </div>
         <ProductsGridSkeleton count={pageSize} viewMode={viewMode} />
-      </div>
-    );
-  }
-
-  // Show image loading progress
-  if (isImageLoading && products.length > 0) {
-    return (
-      <div className={className}>
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="text-2xl font-bold">Products</h2>
-          {/* <div className="text-sm text-gray-600">
-            Loading images... {Math.round(imageLoadingProgress)}%
-          </div> */}
-        </div>
-        <div className="space-y-4">
-          <div className="w-full bg-gray-200 rounded-full h-2">
-            <div 
-              className="bg-blue-600 h-2 rounded-full transition-all duration-300"
-              style={{ width: `${imageLoadingProgress}%` }}
-            ></div>
-          </div>
-          <ProductsGridSkeleton count={pageSize} viewMode={viewMode} />
-        </div>
       </div>
     );
   }
@@ -535,16 +487,6 @@ const PaginatedProducts: React.FC<PaginatedProductsProps> = ({
                       >
                         View Details
                       </Button>
-                      {(!isOutOfStock || product.enable_quote_request) && !hasVariations && (
-                        <Button
-                          size="sm"
-                          className="text-white animated-button"
-                          onClick={() => handleQuickAdd(product)}
-                        >
-                          <ShoppingCart className="h-4 w-4 mr-1" />
-                          Quick Add
-                        </Button>
-                      )}
                       {(!isOutOfStock || product.enable_quote_request) && hasVariations && (
                         <Button
                           size="sm"
@@ -637,22 +579,7 @@ const PaginatedProducts: React.FC<PaginatedProductsProps> = ({
                     </Button>
                   </div>
 
-                  {/* Quick Add to Cart */}
-                  {!hasVariations && (
-                    <div className="absolute bottom-2 left-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                      <Button
-                        size="sm"
-                        className="w-full text-white font-medium"
-                        disabled={isOutOfStock && !product.enable_quote_request}
-                        onClick={() => handleQuickAdd(product)}
-                      >
-                        <ShoppingCart className="h-4 w-4 mr-1" />
-                        {isOutOfStock && !product.enable_quote_request
-                          ? "Out of Stock"
-                          : "Quick Add"}
-                      </Button>
-                    </div>
-                  )}
+                  {/* Bottom overlay reserved for future actions (Quick Add removed) */}
                 </div>
 
                 {/* Product Info */}
@@ -772,13 +699,6 @@ const PaginatedProducts: React.FC<PaginatedProductsProps> = ({
       </div>
 
       {/* All products loaded - no pagination needed */}
-
-      {/* Cart Animation Dialog */}
-      <CartAnimationDialog
-        isOpen={cartDialogOpen}
-        onOpenChange={setCartDialogOpen}
-        productImageSrc={selectedProductImage}
-      />
 
       {/* Performance Monitor - Simplified for direct URLs */}
       {process.env.NODE_ENV === 'development' && (

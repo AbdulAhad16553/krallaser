@@ -4,22 +4,18 @@ import React, { useEffect, useState, useRef } from "react";
 import PriceRangeFilter from "../../common/PriceRangeFilter";
 import Categories from "../Categories";
 import Products from "@/components/Products";
-import { productService } from "@/lib/erpnext/services/productService";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { 
     Grid3X3, 
     List, 
     Filter, 
-    SortAsc, 
-    SortDesc,
+    SortAsc,
     ChevronRight,
     Home
 } from "lucide-react";
-import ProductSkeleton from "@/common/Skeletons/Products";
 import Link from "next/link";
 
 interface NecessaryProps {
@@ -53,38 +49,25 @@ const CategoriesContent = ({
     const [showFilters, setShowFilters] = useState(false);
     const userChangedPrice = useRef(false);
 
-    const [data, setData] = useState<any>(null);
-    const [loading, setLoading] = useState(false);
-
-    // Fetch products when category changes
+    // Initialize price range from catProducts
     useEffect(() => {
-        const fetchProducts = async () => {
-            if (!catProducts?.[0]?.cat_id) return;
+        if (catProducts && catProducts.length > 0 && !userChangedPrice.current) {
+            const prices = catProducts.flatMap((product: any) => {
+                const prices: number[] = [];
+                // Get price from main product
+                if (product.sale_price) prices.push(product.sale_price);
+                if (product.base_price) prices.push(product.base_price);
+                // Get prices from variations if they exist
+                if (product.product_variations) {
+                    product.product_variations.forEach((variation: any) => {
+                        if (variation.sale_price) prices.push(variation.sale_price);
+                        if (variation.base_price) prices.push(variation.base_price);
+                    });
+                }
+                return prices;
+            }).filter((price: number) => price > 0);
             
-            setLoading(true);
-            try {
-                const products = await productService.getProductsByCategory(catProducts[0].cat_id);
-                setData({ products });
-            } catch (error) {
-                console.error('Error fetching products:', error);
-                setData({ products: [] });
-            } finally {
-                setLoading(false);
-            }
-        };
-
-        fetchProducts();
-    }, [catProducts]);
-
-    useEffect(() => {
-        if (catProducts.length && !userChangedPrice.current) {
-            const maxPrice = Math.max(
-                ...catProducts.flatMap(({ sale_price, base_price }: any) => [
-                    sale_price || 0,
-                    base_price || 0,
-                ])
-            );
-
+            const maxPrice = prices.length > 0 ? Math.max(...prices) : 0;
             setPriceRange([0, maxPrice]);
         }
     }, [catProducts]);
@@ -95,15 +78,15 @@ const CategoriesContent = ({
     };
 
     const sortProducts = (products: any[], sortOption: SortOption) => {
-        if (!products) return products;
+        if (!products || products.length === 0) return products;
         
         const sortedProducts = [...products];
         
         switch (sortOption) {
             case 'name-asc':
-                return sortedProducts.sort((a, b) => a.name.localeCompare(b.name));
+                return sortedProducts.sort((a, b) => (a.name || '').localeCompare(b.name || ''));
             case 'name-desc':
-                return sortedProducts.sort((a, b) => b.name.localeCompare(a.name));
+                return sortedProducts.sort((a, b) => (b.name || '').localeCompare(a.name || ''));
             case 'price-asc':
                 return sortedProducts.sort((a, b) => {
                     const priceA = a.sale_price || a.base_price || 0;
@@ -117,17 +100,39 @@ const CategoriesContent = ({
                     return priceB - priceA;
                 });
             case 'newest':
-                return sortedProducts.sort((a, b) => new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime());
+                return sortedProducts.sort((a, b) => {
+                    const dateA = a.created_at || a.creation || 0;
+                    const dateB = b.created_at || b.creation || 0;
+                    return new Date(dateB).getTime() - new Date(dateA).getTime();
+                });
             default:
                 return sortedProducts;
         }
     };
 
-    const filteredProducts = data?.products || [];
-    const filteredCurrentStock = data?.current_stock || currentStock;
-    const sortedProducts = sortProducts(filteredProducts.length > 0 ? filteredProducts : catProducts, sortBy);
+    // Filter products by price range
+    const filterByPriceRange = (products: any[]) => {
+        if (!products || products.length === 0) return products;
+        if (priceRange[0] === 0 && priceRange[1] === 0) return products;
+        
+        return products.filter((product: any) => {
+            const productPrice = product.sale_price || product.base_price || 0;
+            // For variable products, check if any variation is in range
+            if (product.product_variations && product.product_variations.length > 0) {
+                return product.product_variations.some((variation: any) => {
+                    const variationPrice = variation.sale_price || variation.base_price || 0;
+                    return variationPrice >= priceRange[0] && variationPrice <= priceRange[1];
+                });
+            }
+            return productPrice >= priceRange[0] && productPrice <= priceRange[1];
+        });
+    };
+
+    // Use catProducts directly (already fetched on server)
+    const filteredProducts = filterByPriceRange(catProducts || []);
+    const sortedProducts = sortProducts(filteredProducts, sortBy);
     const hasProducts = sortedProducts.length > 0;
-    const hasSubCategories = catSubCats.length > 0;
+    const hasSubCategories = catSubCats && catSubCats.length > 0;
     const showPriceFilter = !hasSubCategories && hasProducts;
 
     return (
@@ -259,11 +264,6 @@ const CategoriesContent = ({
                 <div className="lg:col-span-3">
                     {hasSubCategories ? (
                         <Categories subcat={true} categories={catSubCats} hideOnPage={true} />
-                    ) : loading ? (
-                        <div className="space-y-6">
-                            <div className="h-8 bg-gray-200 rounded animate-pulse w-32"></div>
-                            <ProductSkeleton />
-                        </div>
                     ) : hasProducts ? (
                         <div className="space-y-6">
                             <div className="flex items-center justify-between">
@@ -275,7 +275,7 @@ const CategoriesContent = ({
                             
                             <Products
                                 products={sortedProducts}
-                                currentStock={filteredCurrentStock}
+                                currentStock={currentStock}
                                 hideOnPage={true}
                                 storeCurrency={storeCurrency}
                                 necessary={necessary}
@@ -290,20 +290,34 @@ const CategoriesContent = ({
                                 </div>
                                 <h3 className="text-xl font-semibold text-gray-900 mb-2">No products found</h3>
                                 <p className="text-gray-600 mb-4">
-                                    Try adjusting your filters or check back later for new products.
+                                    {catProducts && catProducts.length > 0
+                                        ? "No products match your current filters. Try adjusting your price range."
+                                        : "This category doesn't have any products yet. Check back later for new products."}
                                 </p>
-                                <Button 
-                                    variant="outline"
-                                    onClick={() => {
-                                        setPriceRange([0, Math.max(...catProducts.flatMap(({ sale_price, base_price }: any) => [
-                                            sale_price || 0,
-                                            base_price || 0,
-                                        ]))]);
-                                        userChangedPrice.current = false;
-                                    }}
-                                >
-                                    Clear Filters
-                                </Button>
+                                {catProducts && catProducts.length > 0 && (
+                                    <Button 
+                                        variant="outline"
+                                        onClick={() => {
+                                            const prices = catProducts.flatMap((product: any) => {
+                                                const prices: number[] = [];
+                                                if (product.sale_price) prices.push(product.sale_price);
+                                                if (product.base_price) prices.push(product.base_price);
+                                                if (product.product_variations) {
+                                                    product.product_variations.forEach((variation: any) => {
+                                                        if (variation.sale_price) prices.push(variation.sale_price);
+                                                        if (variation.base_price) prices.push(variation.base_price);
+                                                    });
+                                                }
+                                                return prices;
+                                            }).filter((price: number) => price > 0);
+                                            const maxPrice = prices.length > 0 ? Math.max(...prices) : 0;
+                                            setPriceRange([0, maxPrice]);
+                                            userChangedPrice.current = false;
+                                        }}
+                                    >
+                                        Clear Filters
+                                    </Button>
+                                )}
                             </CardContent>
                         </Card>
                     )}

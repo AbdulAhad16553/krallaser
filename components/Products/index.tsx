@@ -22,8 +22,6 @@ import {
 } from "@/lib/currencyUtils";
 import { Badge } from "@/components/ui/badge";
 import { ShoppingCart, Heart, Eye, Star } from "lucide-react";
-import { AddToCart } from "@/sub/cart/addToCart";
-import { CartAnimationDialog } from "@/common/CartAnimationDialog";
 
 interface NecessaryProps {
   companyId: string;
@@ -89,8 +87,6 @@ const Products = ({
   viewMode = "grid",
 }: ProductsProps) => {
   const router = useRouter();
-  const [cartDialogOpen, setCartDialogOpen] = useState(false);
-  const [selectedProductImage, setSelectedProductImage] = useState<any>(null);
 
   // Extract item names for batch image loading
   const itemNames = React.useMemo(() => {
@@ -107,31 +103,6 @@ const Products = ({
     itemNames,
     enabled: products && products.length > 0
   });
-
-  // Handle quick add to cart
-  const handleQuickAdd = (product: any) => {
-    // Calculate product stock
-    const productStock = calculateProductStock(product, currentStock);
-    
-    // Only add to cart if product has stock > 0
-    if (productStock > 0) {
-      const result = AddToCart(product, 1);
-      
-      if (result.success) {
-        // Set the product image for animation
-        const featuredImage = product?.product_images?.find(
-          (image: any) => image.position === "featured"
-        );
-        setSelectedProductImage(featuredImage);
-        setCartDialogOpen(true);
-        
-        // Auto close dialog after 2 seconds
-        setTimeout(() => {
-          setCartDialogOpen(false);
-        }, 2000);
-      }
-    }
-  };
 
   if (!products || products.length === 0) {
     return (
@@ -319,16 +290,6 @@ const Products = ({
                       >
                         View Details
                       </Button>
-                      {(!isOutOfStock || product.enable_quote_request) && !hasVariations && (
-                        <Button
-                          size="sm"
-                          className="text-white animated-button"
-                          onClick={() => handleQuickAdd(product)}
-                        >
-                          <ShoppingCart className="h-4 w-4 mr-1" />
-                          Quick Add
-                        </Button>
-                      )}
                       {(!isOutOfStock || product.enable_quote_request) && hasVariations && (
                         <Button
                           size="sm"
@@ -423,22 +384,7 @@ const Products = ({
                     </Button>
                   </div>
 
-                  {/* Quick Add to Cart - Only show for simple products (no variations) */}
-                  {!hasVariations && (
-                    <div className="absolute bottom-2 left-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                      <Button
-                        size="sm"
-                        className="w-full text-white font-medium"
-                        disabled={isOutOfStock && !product.enable_quote_request}
-                        onClick={() => handleQuickAdd(product)}
-                      >
-                        <ShoppingCart className="h-4 w-4 mr-1" />
-                        {isOutOfStock && !product.enable_quote_request
-                          ? "Out of Stock"
-                          : "Quick Add"}
-                      </Button>
-                    </div>
-                  )}
+                  {/* Bottom overlay reserved for future actions (Quick Add removed) */}
                 </div>
 
                 {/* Product Info */}
@@ -578,12 +524,6 @@ const Products = ({
         })}
       </div>
       
-      {/* Cart Animation Dialog */}
-      <CartAnimationDialog
-        isOpen={cartDialogOpen}
-        onOpenChange={setCartDialogOpen}
-        productImageSrc={selectedProductImage}
-      />
     </section>
   );
 };
