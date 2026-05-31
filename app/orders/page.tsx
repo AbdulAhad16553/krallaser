@@ -1,13 +1,16 @@
-import type { Metadata } from "next"
 import AllOrders from "@/modules/AllOrders"
 import { headers } from "next/headers";
 import { getUrlWithScheme } from "@/lib/getUrlWithScheme";
 import Layout from "@/components/Layout";
 
-export const metadata: Metadata = {
-    title: "My Orders | EasyShop",
-    description: "View and track your order history",
-}
+import { buildPageMetadata } from "@/lib/seo";
+
+export const metadata = buildPageMetadata({
+    title: "My Orders",
+    description: "View your Krallaser order history.",
+    path: "/orders",
+    noIndex: true,
+});
 
 export default async function Orders() {
 

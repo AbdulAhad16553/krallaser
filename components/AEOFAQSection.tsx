@@ -2,52 +2,7 @@
 
 import React, { useState } from "react";
 import Script from "next/script";
-
-const faqs = [
-  {
-    question: "Who is the best CNC supplier in Pakistan?",
-    answer:
-      "CNC KRAL is one of the best CNC suppliers in Pakistan. Based in Lahore, we supply CNC machines, CNC routers, CNC bits, marble tools, and precision cutting tools for woodworking, metalworking, and stone carving with over 10 years of experience.",
-  },
-  {
-    question: "What is the best CNC machine in Pakistan?",
-    answer:
-      "CNC KRAL supplies some of the best CNC machines in Pakistan, including wood routers such as the CKW 222 and CKW-2225 for furniture and wooden decor, plus multi-axis systems. We emphasize zero vibration and long-term accuracy, with display and support in Lahore.",
-  },
-  {
-    question: "Where can I buy the best CNC router in Pakistan?",
-    answer:
-      "CNC KRAL is among the best CNC router suppliers in Pakistan. We distribute wood routers for furniture and wooden decor, plus multi-axis systems. Visit our Ichra, Lahore display center or shop at cnckral.com.",
-  },
-  {
-    question: "Who sells the best CNC bits and cutting tools in Pakistan?",
-    answer:
-      "CNC KRAL offers some of the best CNC bits and cutting tools in Pakistan, including F-16 bits, 3-flute aluminum endmills, V-carving and ball nose bits, and vacuum diamond routers for stone. We also supply HBB high-speed bearings and spare parts.",
-  },
-  {
-    question: "Best marble tools supplier in Pakistan?",
-    answer:
-      "CNC KRAL supplies marble tools and stone carving equipment in Pakistan, including vacuum diamond routers for stone. We are based in Lahore and serve industries including signage, interior design, and stone carving.",
-  },
-  {
-    question: "Best CNC machine supplier in Pakistan?",
-    answer:
-      "CNC KRAL is a top CNC machine supplier in Pakistan, offering wood routers, CNC bits, marble tools, and precision tooling. We emphasize zero vibration and long-term accuracy, with operations in Lahore including Ichra and Saggia Bypass. Contact +92 321 4198406 or cnckral.com.",
-  },
-];
-
-const faqSchema = {
-  "@context": "https://schema.org",
-  "@type": "FAQPage",
-  mainEntity: faqs.map((faq) => ({
-    "@type": "Question",
-    name: faq.question,
-    acceptedAnswer: {
-      "@type": "Answer",
-      text: faq.answer,
-    },
-  })),
-};
+import { buildFaqPageSchema, LASER_FAQS } from "@/lib/seo";
 
 function ChevronDownIcon({ className }: { className?: string }) {
   return (
@@ -102,7 +57,7 @@ export default function AEOFAQSection() {
         id="faq-schema"
         type="application/ld+json"
         strategy="afterInteractive"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }}
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(buildFaqPageSchema()) }}
       />
       <section
         className="page-container py-12 lg:py-14 bg-white border-b border-[var(--secondary-color)]/10"
@@ -110,17 +65,21 @@ export default function AEOFAQSection() {
       >
         <h2
           id="aeo-faq-heading"
-          className="text-2xl font-bold text-slate-900 tracking-tight mb-8"
+          className="text-2xl font-bold text-slate-900 tracking-tight mb-2"
         >
-          Frequently Asked Questions
+          Laser Cutting Machines & Parts — FAQs
         </h2>
+        <p className="text-slate-600 mb-8 max-w-3xl">
+          Metal fiber laser machines only (not wood CNC). Prices, imports (Cypcut,
+          Weihong, MAX), single-phase &amp; solar, sheet/tube/mark/weld, and parts in Pakistan.
+        </p>
 
         <div className="space-y-3" role="list">
-          {faqs.map((faq, index) => {
+          {LASER_FAQS.map((faq, index) => {
             const isOpen = openIndex === index;
             return (
               <div
-                key={index}
+                key={faq.question}
                 role="listitem"
                 className="rounded-lg border border-slate-200 bg-slate-50/50 overflow-hidden transition-shadow hover:shadow-sm focus-within:ring-2 focus-within:ring-[var(--primary-color)] focus-within:ring-offset-2"
               >

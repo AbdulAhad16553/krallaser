@@ -1,6 +1,16 @@
 User-agent: *
 Allow: /
-Sitemap: https://cnckral.com/sitemap.xml
-Sitemap: https://cnckral.com/image-sitemap.xml
+Disallow: /api/
+Disallow: /account/
+Disallow: /checkout/
+Disallow: /cart/
+Disallow: /orders/
+Disallow: /settings/
 
-# AI/LLM: see https://cnckral.com/llms.txt for brand and content summary
+# Sitemaps (products + images with item names)
+Sitemap: https://krallaser.com/sitemap.xml
+Sitemap: https://krallaser.com/image-sitemap.xml
+
+# AI / LLM brand summary
+# https://krallaser.com/llms.txt
+# https://krallaser.com/ai.txt

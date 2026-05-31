@@ -6,8 +6,8 @@ import { ShoppingCart } from "lucide-react";
 import { useCartCount } from "@/hooks/useCartCount";
 
 interface CartProps {
-  /** Light header variant for white mobile app bar */
-  variant?: "default" | "light";
+  /** Light header variant for white mobile app bar; onGradient for desktop brand header */
+  variant?: "default" | "light" | "onGradient";
 }
 
 const Cart = ({ variant = "default" }: CartProps) => {
@@ -16,7 +16,9 @@ const Cart = ({ variant = "default" }: CartProps) => {
   const light =
     variant === "light"
       ? "p-1.5 rounded-full bg-neutral-100 border border-neutral-200/80 shadow-none hover:bg-neutral-200/80"
-      : `
+      : variant === "onGradient"
+        ? "rounded-md p-2 text-white transition-colors hover:bg-white/15 group"
+        : `
         p-2 rounded-full
         backdrop-blur-md bg-white/40 
         shadow-lg border border-white/20
@@ -53,7 +55,9 @@ const Cart = ({ variant = "default" }: CartProps) => {
         className={`relative z-10 transition-colors duration-300 ${
           variant === "light"
             ? "w-6 h-6 text-neutral-700"
-            : "w-7 h-7 text-gray-700 group-hover:text-black"
+            : variant === "onGradient"
+              ? "h-6 w-6 text-white group-hover:text-red-100"
+              : "w-7 h-7 text-gray-700 group-hover:text-black"
         }`}
       />
 

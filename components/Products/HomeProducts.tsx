@@ -505,7 +505,7 @@ const HomeProducts: React.FC<HomeProductsProps> = ({
                   </div>
 
                   <ProductImagePreview
-                    itemName={product.sku}
+                    itemName={product.name}
                     productName={product.name}
                     imageUrl={imageUrl}
                     hasImage={productHasImage}

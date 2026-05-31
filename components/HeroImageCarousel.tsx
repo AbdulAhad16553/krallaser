@@ -5,9 +5,9 @@ import Image from "next/image";
 
 const HERO_IMAGES = [
   { src: "/coverr%20web.jpg.jpeg", alt: "TOOLS - Imported Cutting Tools" },
-  { src: "/coverr%20webb.jpg.jpeg", alt: "PRECISION - Advanced CNC & Laser Solutions" },
-  { src: "/web%201.jpg.jpeg", alt: "KRAL CNC machines and industrial showroom" },
-  { src: "/web%202.jpg.jpeg", alt: "KRAL CNC machine and control cabinet" },
+  { src: "/coverr%20webb.jpg.jpeg", alt: "Krallaser metal fiber laser cutting solutions Pakistan" },
+  { src: "/web%201.jpg.jpeg", alt: "Krallaser laser cutting machines showroom Lahore" },
+  { src: "/web%202.jpg.jpeg", alt: "Fiber laser cutting machine and control system" },
   { src: "/web%203.jpg.jpeg", alt: "POWER - Industrial Machines" },
 ];
 

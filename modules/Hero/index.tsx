@@ -36,7 +36,7 @@ const Hero = async ({
   homeFeaturedProducts,
   homeFeaturedProductLimit = 8,
 }: HeroProps) => {
-  const storeName =  "CNC KRAL";
+  const storeName =  "Krallaser";
 
   const featuredProduct = Array.isArray(products) && products.length > 0 ? products[0] : null;
   const productImages = (() => {
@@ -49,38 +49,38 @@ const Hero = async ({
 
   const infoCards = [
     {
-      title: "CNC Tool Holder & Collet Maintenance",
-      description: "Keep your tools performing at peak",
+      title: "Laser Lens & Nozzle Maintenance",
+      description: "Keep your cutter performing at peak",
       content: [
         {
           heading: "Why it matters",
-          body: "A dirty or worn collet can cause runout (wobble), heat, vibration, and premature bit breakage – even if the bit is new.",
+          body: "A dirty lens, worn nozzle, or low assist gas can reduce beam quality, cause burrs, overheating, and inconsistent cuts — even on a new machine.",
         },
         {
           heading: "How often to check",
-          body: "Inspect and clean tool holders and collets daily in production, or at least every few days in lighter use.",
+          body: "Inspect protective windows, focus lens, and nozzle daily in production, or every few days in lighter use. Replace consumables at the first sign of burn marks or spatter buildup.",
         },
         {
           heading: "Basic maintenance steps",
-          body: "Clean collet and nut with compressed air and a soft brush, check for cracks or discoloration, tighten with proper torque, keep tapers clean and store tools clean and dry.",
+          body: "Clean lenses with proper wipes and fluid only, check nozzle alignment and diameter, verify gas pressure and flow, keep the bed and head free of debris, and stock spare lenses and nozzles from Krallaser.",
         },
       ],
     },
     {
-      title: "Why are my CNC bits breaking?",
+      title: "Why is my laser cut quality poor?",
       description: "Expert troubleshooting guide",
       content: [
         {
-          heading: "Feeds and speeds",
-          body: "Bits break when feed is too slow and RPM too high (rubbing) or feed is too fast and RPM too low (overloading). Adjust so each tooth takes a proper chip.",
+          heading: "Power, speed & focus",
+          body: "Cuts look rough when power is too low, speed too high, or focus is off. Match parameters to material thickness and recheck focal height after nozzle changes.",
         },
         {
-          heading: "Depth per pass",
-          body: "Taking too deep a cut for the bit size, especially in hard material, overloads the tool. Use smaller step‑downs and multiple passes.",
+          heading: "Gas & nozzle setup",
+          body: "Wrong assist gas, low pressure, or a blocked nozzle causes dross, oxidation, and flare. Use the correct gas for your material and replace nozzles when the orifice is worn.",
         },
         {
-          heading: "Right tool and setup",
-          body: "Use the correct bit for the material, replace worn bits, keep collets in good condition, and clamp the workpiece firmly to avoid vibration.",
+          heading: "Optics & alignment",
+          body: "Replace scratched protective windows, clean the focus lens carefully, confirm beam alignment, and clamp sheet metal flat. Order matched parts at krallaser.com/parts if quality does not improve.",
         },
       ],
     },
@@ -93,11 +93,14 @@ const Hero = async ({
         <div className="mb-12 max-w-5xl mx-auto">
           <HeroImageCarousel />
         </div>
-        {/* Welcome hero - CNC Tooling Shop style */}
+        {/* Welcome hero */}
         <div className="text-center max-w-3xl mx-auto mb-8">
           <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-slate-900 tracking-tight mb-4">
-            Welcome to the {storeName}
+            Laser Cutting Machines &amp; Parts in Pakistan
           </h1>
+          <p className="text-base sm:text-lg text-slate-600 mb-6 max-w-2xl mx-auto">
+            {storeName} — metal fiber laser cutters, spare parts, and expert support from Lahore.
+          </p>
           {!hideOnPage && (
             <Link href="/machine">
               <Button
@@ -139,7 +142,7 @@ const Hero = async ({
                 <div className="relative shrink-0 w-24 h-24 sm:w-28 sm:h-28 rounded-full overflow-hidden bg-slate-100 border border-slate-200 transition-transform duration-300 group-hover:scale-105">
                   <FeaturedProductImageCarousel
                     images={productImages}
-                    alt={featuredProduct.name || "Featured product"}
+                    alt={featuredProduct.name || "Laser cutting product"}
                     className="w-full h-full"
                     itemCode={featuredProduct.sku || featuredProduct.id}
                     imageUrl={featuredProduct.image_url}
@@ -176,7 +179,7 @@ const Hero = async ({
           </div>
         )}
 
-        {/* Info cards - CNC Tooling Shop style */}
+        {/* Info cards — laser maintenance & troubleshooting */}
         <HeroInfoCards cards={infoCards} />
       </div>
     </section>

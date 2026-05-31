@@ -1,13 +1,16 @@
-import type { Metadata } from "next"
 import UserAccount from "@/modules/UserAccount"
 import Layout from "@/components/Layout"
 import { headers } from "next/headers";
 import { getUrlWithScheme } from "@/lib/getUrlWithScheme";
 
-export const metadata: Metadata = {
-    title: "My Account | EasyShop",
-    description: "View and manage your account information and order history",
-}
+import { buildPageMetadata } from "@/lib/seo";
+
+export const metadata = buildPageMetadata({
+    title: "My Account",
+    description: "Manage your Krallaser account.",
+    path: "/account",
+    noIndex: true,
+});
 
 export default async function AccountPage() {
 

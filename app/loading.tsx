@@ -1,6 +1,6 @@
-import { CncBitLoader } from "@/components/CncBitLoader";
+import { LaserLoader } from "@/components/LaserLoader";
 
 export default function Loading() {
-  return <CncBitLoader fullScreen />;
+  return <LaserLoader fullScreen />;
 }
 

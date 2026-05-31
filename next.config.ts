@@ -46,11 +46,6 @@ const nextConfig: NextConfig = {
       },
       {
         protocol: "https",
-        hostname: "erp.cnckral.com",
-        pathname: "/**",
-      },
-      {
-        protocol: "https",
         hostname: "images.unsplash.com",
         pathname: "/**",
       },
@@ -69,6 +64,36 @@ const nextConfig: NextConfig = {
 
   // Compression
   compress: true,
+
+  async redirects() {
+    return [
+      {
+        source: "/blog/best-cnc-router-pakistan",
+        destination: "/blog/best-laser-cutting-machine-pakistan",
+        permanent: true,
+      },
+      {
+        source: "/blog/cnc-router-buying-guide",
+        destination: "/blog/laser-cutting-machine-buying-guide",
+        permanent: true,
+      },
+      {
+        source: "/blog/best-fiber-laser-machine-pakistan",
+        destination: "/blog/fiber-laser-vs-co2-laser-pakistan",
+        permanent: true,
+      },
+      {
+        source: "/blog/cnc-bits-types",
+        destination: "/blog/laser-cutting-machine-parts-guide",
+        permanent: true,
+      },
+      {
+        source: "/blog/cnc-laser-cutting-services-pakistan",
+        destination: "/blog/metal-laser-cutting-services-pakistan",
+        permanent: true,
+      },
+    ];
+  },
 
   // Headers for better caching
   async headers() {

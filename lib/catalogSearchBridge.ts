@@ -1,6 +1,6 @@
 /** Instant catalog search while typing (URL updates are debounced separately in the header). */
-const HOME_CATALOG_Q = "cnckral:home-catalog-q";
-const SHOP_SEARCH_Q = "cnckral:shop-search-q";
+const HOME_CATALOG_Q = "krallaser:home-catalog-q";
+const SHOP_SEARCH_Q = "krallaser:shop-search-q";
 
 export function emitHomeCatalogSearchQuery(q: string): void {
   if (typeof window === "undefined") return;

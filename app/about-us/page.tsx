@@ -1,4 +1,3 @@
-import type { Metadata } from "next";
 import Hero from "@/modules/Hero";
 import Layout from "@/components/Layout";
 import AboutUsContent from "@/components/AboutUsContent";
@@ -7,11 +6,14 @@ import { headers } from "next/headers";
 import { getAllCategories } from "@/hooks/getCategories";
 import { getProducts } from "@/hooks/getProducts";
 
-export const metadata: Metadata = {
-  title: "About CNC KRAL | CNC Machinery & Precision Tooling Distributor",
+import { buildPageMetadata } from "@/lib/seo";
+
+export const metadata = buildPageMetadata({
+  title: "About Krallaser | Metal Fiber Laser Importer Lahore",
   description:
-    "CNC KRAL is a prominent industrial machinery and hardware distributor in Lahore, Pakistan, specializing in CNC solutions, wood routers, laser cutters, plasma cutters, and precision cutting tools.",
-};
+    "Krallaser is a Lahore-based metal fiber laser cutting machine importer—1kW–3kW systems, sheet & tube, marking & welding, Cypcut/Weihong, spare parts. Not wood CNC routers.",
+  path: "/about-us",
+});
 
 export default async function AboutUsPage() {
   const Headers = await headers();

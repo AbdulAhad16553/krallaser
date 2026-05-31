@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useRef, useCallback, Suspense } from "react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import Image from "next/image";
 import {
   Mail,
@@ -32,7 +33,15 @@ interface StoreData {
   };
 }
 
+const navLinkClass = (pathname: string, href: string, matchPrefix = false) => {
+  const active =
+    pathname === href ||
+    (matchPrefix && href !== "/" && pathname.startsWith(href));
+  return active ? "header-nav-link header-nav-link-active" : "header-nav-link";
+};
+
 const Header = ({ storeData }: { storeData: StoreData }) => {
+  const pathname = usePathname() ?? "/";
   const [categoryDrawerOpen, setCategoryDrawerOpen] = useState(false);
   const [isCategoryMenuOpen, setIsCategoryMenuOpen] = useState(false);
   const [categories, setCategories] = useState<
@@ -55,7 +64,7 @@ const Header = ({ storeData }: { storeData: StoreData }) => {
   const storeCurrency = storeData?.store_detail?.currency || "Rs.";
   // Contact fallbacks
   const topBarPhone = "0322 4414443";
-  const topBarEmail = "cnckral@gmail.com";
+  const topBarEmail = "krallaser@gmail.com";
 
   const fetchCategories = useCallback(async () => {
     if (!storeId) return;
@@ -154,18 +163,18 @@ const Header = ({ storeData }: { storeData: StoreData }) => {
       </div>
 
       {/* Main Header — mobile: white AliExpress-style row (logo · bell) + pill search; desktop: gradient */}
-      <header className="sticky top-0 z-50 border-b border-neutral-200 bg-white pt-[env(safe-area-inset-top,0px)] shadow-sm md:border-white/20 md:bg-[linear-gradient(135deg,#0368E5_0%,#363E47_100%)] md:shadow-sm">
+      <header className="site-header-navbar sticky top-0 z-50 border-b border-neutral-200 max-md:bg-white pt-[env(safe-area-inset-top,0px)] shadow-sm md:border-white/20 md:text-white md:shadow-sm">
         <div className="page-container py-3 md:py-4">
           {/* Mobile: row 1 logo | categories | bell — row 2 full-width search */}
           <div className="flex flex-col gap-3 md:hidden">
             <div className="flex items-center justify-between gap-3">
               <Link href="/" className="group min-w-0 shrink-0">
                 <Image
-                  src="/HORIZONTAL Logo CNC KRAL.png"
+                  src="/krallogo.svg"
                   alt={`${storeName || "Store"} Logo`}
-                  width={160}
-                  height={50}
-                  className="h-9 w-auto max-w-[10rem] object-contain object-left"
+                  width={180}
+                  height={56}
+                  className="h-9 w-auto max-w-[11rem] object-contain object-left opacity-100"
                   priority
                 />
               </Link>
@@ -194,11 +203,12 @@ const Header = ({ storeData }: { storeData: StoreData }) => {
             <div className="flex shrink-0 items-center gap-4">
               <Link href="/" className="group min-w-0">
                 <Image
-                  src="/HORIZONTAL Logo CNC KRAL.png"
+                  src="/krallogo.svg"
                   alt={`${storeName || "Store"} Logo`}
-                  width={132}
-                  height={42}
-                  className="max-h-9 w-auto max-w-[8.5rem] object-contain brightness-0 invert"
+                  width={180}
+                  height={56}
+                  className="max-h-9 w-auto max-w-[11rem] object-contain opacity-100"
+                  priority
                 />
               </Link>
             </div>
@@ -206,7 +216,7 @@ const Header = ({ storeData }: { storeData: StoreData }) => {
             <nav className="flex min-w-0 flex-1 items-center justify-center gap-4 lg:gap-8 overflow-x-auto [&::-webkit-scrollbar]:hidden [scrollbar-width:none]">
               <Link
                 href="/"
-                className="flex-shrink-0 text-white/90 hover:text-white font-medium transition-colors text-base py-1.5"
+                className={`flex-shrink-0 ${navLinkClass(pathname, "/")}`}
               >
                 Home
               </Link>
@@ -214,7 +224,7 @@ const Header = ({ storeData }: { storeData: StoreData }) => {
                 <Link
                   ref={categoryButtonRef}
                   href="/category"
-                  className="flex items-center space-x-1 text-white/90 hover:text-white font-medium transition-colors text-base py-1.5"
+                  className={`flex items-center space-x-1 ${navLinkClass(pathname, "/category", true)}`}
                   onMouseEnter={handleCategoryMouseEnter}
                   onMouseLeave={handleCategoryMouseLeave}
                 >
@@ -266,25 +276,25 @@ const Header = ({ storeData }: { storeData: StoreData }) => {
               </div>
               <Link
                 href="/machine"
-                className="flex-shrink-0 text-white/90 hover:text-white font-medium transition-colors text-sm sm:text-base py-1.5"
+                className={`flex-shrink-0 ${navLinkClass(pathname, "/machine", true)}`}
               >
                 Machines
               </Link>
               <Link
                 href="/parts"
-                className="flex-shrink-0 text-white/90 hover:text-white font-medium transition-colors text-sm sm:text-base py-1.5"
+                className={`flex-shrink-0 ${navLinkClass(pathname, "/parts", true)}`}
               >
                 Parts
               </Link>
               <Link
                 href="/about-us"
-                className="flex-shrink-0 text-white/90 hover:text-white font-medium transition-colors text-sm sm:text-base py-1.5"
+                className={`flex-shrink-0 ${navLinkClass(pathname, "/about-us")}`}
               >
                 About
               </Link>
               <Link
                 href="/contact"
-                className="flex-shrink-0 text-white/90 hover:text-white font-medium transition-colors text-base py-1.5"
+                className={`flex-shrink-0 ${navLinkClass(pathname, "/contact")}`}
               >
                 Contact
               </Link>
@@ -293,7 +303,7 @@ const Header = ({ storeData }: { storeData: StoreData }) => {
             <div className="flex shrink-0 items-center gap-2 lg:gap-3">
               <Link
                 href="/orders"
-                className="relative p-2 text-white/90 transition-colors hover:text-white"
+                className="relative rounded-md p-2 text-white transition-colors hover:bg-white/15 hover:text-white"
                 aria-label="Orders and notifications"
               >
                 <Bell className="h-6 w-6" />
@@ -301,7 +311,7 @@ const Header = ({ storeData }: { storeData: StoreData }) => {
               <Suspense
                 fallback={
                   <div
-                    className="hidden md:block h-9 w-full max-w-xs rounded-lg bg-white/10 border border-white/20"
+                    className="header-search-bar hidden md:block h-9 w-full max-w-xs rounded-lg border"
                     aria-hidden
                   />
                 }
@@ -310,12 +320,12 @@ const Header = ({ storeData }: { storeData: StoreData }) => {
               </Suspense>
               <Link
                 href="/wishlist"
-                className="relative p-2 text-white/90 transition-all duration-300 hover:text-red-300 hover:scale-110 active:scale-95 group"
+                className="relative rounded-md p-2 text-white transition-all duration-300 hover:bg-white/15 hover:text-red-200 hover:scale-110 active:scale-95 group"
               >
                 <span className="absolute inset-0 rounded-full opacity-0 group-hover:opacity-100 bg-red-400/20 blur-xl transition-opacity duration-300" />
-                <Heart className="w-6 h-6 relative z-10 transition-all duration-300 group-hover:fill-red-300 group-hover:text-red-300 group-hover:animate-pulse" />
+                <Heart className="relative z-10 h-6 w-6 transition-all duration-300 group-hover:fill-red-200 group-hover:text-red-200" />
               </Link>
-              <Cart />
+              <Cart variant="onGradient" />
             </div>
           </div>
         </div>

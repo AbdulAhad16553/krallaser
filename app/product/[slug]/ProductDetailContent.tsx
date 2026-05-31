@@ -21,6 +21,7 @@ import Image from 'next/image';
 import AttributeFilter from '@/common/AttributeFilter';
 import { AddToCart } from '@/sub/cart/addToCart';
 import { getErpnextImageUrl } from '@/lib/erpnextImageUtils';
+import { getProductDisplayName, productImageAlt } from '@/lib/productSeo';
 import { motion } from "motion/react";
 import ProductDescription from '@/components/ProductDescription';
 import MachineProductGallery from '@/components/MachineProductGallery';
@@ -116,11 +117,14 @@ export default function ProductDetailContent({ slug, initialProduct }: ProductDe
     if (product) {
       const images: Array<{url: string, alt: string, type: 'main' | 'attachment'}> = [];
       
-      // Add main product image if exists
-      if (product.image) {
+      const displayName = getProductDisplayName(product);
+      const mainImagePath =
+        (product as { website_image?: string }).website_image || product.image;
+
+      if (mainImagePath) {
         images.push({
-          url: getErpnextImageUrl(product.image),
-          alt: product.item_name,
+          url: getErpnextImageUrl(mainImagePath),
+          alt: productImageAlt(displayName),
           type: 'main'
         });
       }
@@ -142,7 +146,7 @@ export default function ProductDetailContent({ slug, initialProduct }: ProductDe
         imageAttachments.forEach((attachment, index) => {
           images.push({
             url: getErpnextImageUrl(attachment.file_url),
-            alt: attachment.file_name || `Attachment ${index + 1}`,
+            alt: productImageAlt(displayName),
             type: 'attachment'
           });
         });
@@ -412,6 +416,7 @@ export default function ProductDetailContent({ slug, initialProduct }: ProductDe
   }
 
   const currentImage = galleryImages[currentImageIndex];
+  const displayName = getProductDisplayName(product);
 
   return (
     <div className={isCustomQuotationItem ? "min-h-screen bg-gradient-to-b from-neutral-50 to-slate-100/50" : ""}>
@@ -531,7 +536,7 @@ export default function ProductDetailContent({ slug, initialProduct }: ProductDe
             className="relative w-full overflow-hidden rounded-2xl bg-neutral-100 shadow-xl ring-1 ring-neutral-200/50"
           >
             {galleryImages.length > 0 ? (
-              <div className="relative aspect-[21/9] w-full min-h-[200px] sm:min-h-[240px] bg-neutral-100">
+              <figure className="relative aspect-[21/9] w-full min-h-[200px] sm:min-h-[240px] bg-neutral-100">
                 <Image
                   src={galleryImages[0].url}
                   alt={galleryImages[0].alt}
@@ -541,6 +546,7 @@ export default function ProductDetailContent({ slug, initialProduct }: ProductDe
                   sizes="100vw"
                   priority
                 />
+                <figcaption className="sr-only">{displayName}</figcaption>
                 {galleryImages.length > 1 && (
                   <button
                     onClick={() => openImagePreview(0)}
@@ -550,7 +556,7 @@ export default function ProductDetailContent({ slug, initialProduct }: ProductDe
                     View gallery ({galleryImages.length})
                   </button>
                 )}
-              </div>
+              </figure>
             ) : (
               <div className="flex aspect-[21/9] min-h-[200px] w-full items-center justify-center bg-neutral-100 text-neutral-400">
                 <Package className="h-16 w-16 opacity-40" />
@@ -566,7 +572,7 @@ export default function ProductDetailContent({ slug, initialProduct }: ProductDe
         <div className={isCustomQuotationItem ? "w-full space-y-5" : "lg:col-span-7 space-y-8"}>
           {/* Main Image – only for non-quotation items */}
           {!isCustomQuotationItem && (
-          <div className="aspect-square bg-neutral-100 rounded-2xl overflow-hidden ring-1 ring-neutral-200/60 shadow-lg relative group">
+          <figure className="aspect-square bg-neutral-100 rounded-2xl overflow-hidden ring-1 ring-neutral-200/60 shadow-lg relative group">
             {galleryImages.length > 0 && currentImage ? (
               <div className="relative w-full h-full">
                 <Image
@@ -578,6 +584,7 @@ export default function ProductDetailContent({ slug, initialProduct }: ProductDe
                   sizes="(max-width: 1024px) 100vw, 60vw"
                   priority
                 />
+                <figcaption className="sr-only">{displayName}</figcaption>
                 <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors duration-200 flex items-center justify-center">
                   <span className="opacity-0 group-hover:opacity-100 transition-opacity duration-200 bg-white/90 text-slate-800 rounded-full p-3 shadow-lg">
                     <ZoomIn className="h-6 w-6" />
@@ -595,7 +602,7 @@ export default function ProductDetailContent({ slug, initialProduct }: ProductDe
                 <p className="text-sm font-medium">No image available</p>
               </div>
             )}
-          </div>
+          </figure>
           )}
 
           {/* Thumbnails – hidden for quotation items */}
@@ -611,7 +618,7 @@ export default function ProductDetailContent({ slug, initialProduct }: ProductDe
                       : 'ring-transparent hover:ring-neutral-300'
                   }`}
                   onClick={() => setCurrentImageIndex(index)}
-                  aria-label={`View image ${index + 1}`}
+                  aria-label={`View ${image.alt}`}
                 >
                   <Image
                     src={image.url}

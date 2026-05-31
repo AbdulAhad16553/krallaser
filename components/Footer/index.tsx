@@ -68,7 +68,7 @@ const Footer = async ({ storeData }: FooterProps) => {
   const { socialLinks } = await getSocialLink(storeId)
 
   let companyContactDetails = {
-    email: "cnckral@gmail.com",
+    email: "krallaser@gmail.com",
     phone: "0322 4414443",
     address: storeData?.store_contact_detail?.address,
   }
@@ -77,7 +77,7 @@ const Footer = async ({ storeData }: FooterProps) => {
   const description =
     page?.content ||
     tagline ||
-    `${storeName} is your trusted partner for high-quality products and exceptional service.`
+    `${storeName} — metal fiber laser cutting machines and spare parts in Pakistan.`
 
   const socialIcons: Record<string, ReactElement> = {
     facebook: <Facebook size={20} />,
@@ -113,11 +113,11 @@ const Footer = async ({ storeData }: FooterProps) => {
               <div className="mb-8">
                 <div className="mb-6">
                   <Image
-                    src="/HORIZONTAL Logo CNC KRAL.png"
+                    src="/krallogo.svg"
                     alt={`${storeName || "Store"} Logo`}
-                    width={160}
-                    height={50}
-                    className="max-h-12 object-contain brightness-0 invert"
+                    width={200}
+                    height={62}
+                    className="max-h-12 w-auto object-contain opacity-100"
                   />
                 </div>
                 <p className="text-white/90 text-sm leading-relaxed mb-6 max-w-sm">

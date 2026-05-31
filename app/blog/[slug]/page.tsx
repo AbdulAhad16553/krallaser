@@ -21,7 +21,7 @@ export async function generateMetadata({
 }: PageProps): Promise<Metadata> {
   const { slug } = await params;
   const article = getArticleBySlug(slug);
-  if (!article) return { title: "Article | CNC KRAL" };
+  if (!article) return { title: "Article | Krallaser" };
   return {
     title: article.title,
     description: article.description,
@@ -70,9 +70,9 @@ export default async function BlogArticlePage({ params }: PageProps) {
     datePublished: article.publishedAt,
     publisher: {
       "@type": "Organization",
-      name: "CNC KRAL",
+      name: "Krallaser",
       url: SITE_URL,
-      logo: { "@type": "ImageObject", url: `${SITE_URL}/cnc_kral.png` },
+      logo: { "@type": "ImageObject", url: `${SITE_URL}/krallogo.svg` },
     },
     mainEntityOfPage: {
       "@type": "WebPage",

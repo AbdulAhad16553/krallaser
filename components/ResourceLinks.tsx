@@ -6,13 +6,13 @@ import { Wrench, Layers, Gauge, Lightbulb, ChevronRight } from "lucide-react";
 
 const resources = [
   {
-    title: "Tooling Recommendations",
+    title: "Parts Recommendations",
     icon: Wrench,
-    description: "Expert guidance for your setup",
+    description: "Expert guidance for your laser setup",
     answerPoints: [
-      "Match tool to material and operation: wood, plastics, metals, and stone each need the right geometry and coating.",
-      "Use high‑quality collets and holders – poor holding is one of the main causes of bad finish and broken tools.",
-      "Build a small ‘core kit’ for your most common jobs, then add specialty tools only when a use‑case really needs them.",
+      "Match lens focal length, nozzle diameter, and assist gas to your machine power and typical sheet thickness.",
+      "Stock protective windows, focus lenses, and nozzles — worn optics are a leading cause of poor cuts and downtime.",
+      "Build a core spare-parts kit for your most common materials, then add specialty items (e.g. high-pressure nozzles) as jobs require.",
     ],
   },
   {
@@ -20,19 +20,19 @@ const resources = [
     icon: Layers,
     description: "Material and use case guides",
     answerPoints: [
-      "For MDF and plywood, use compression or downcut tools for clean edges and good chip evacuation.",
-      "For acrylic and plastics, use single‑ or double‑flute tools, sharp edges, and higher feed to avoid melting.",
-      "For marble and stone, use the correct bonded or diamond tools and keep coolant / dust extraction in mind.",
+      "Stainless and mild steel: fiber laser with nitrogen or oxygen assist; tune power and speed for edge quality and dross.",
+      "Acrylic and plastics: CO2 laser works well; use correct focus and air assist to avoid flaming or melted edges.",
+      "Wood, MDF, and laminates: CO2 or lower-power fiber depending on thickness; watch for charring and use extraction.",
     ],
   },
   {
-    title: "Feeds / Speeds",
+    title: "Power / Speed",
     icon: Gauge,
-    description: "Optimal cutting parameters",
+    description: "Optimal laser cutting parameters",
     answerPoints: [
-      "Start from recommended chipload tables for your tool diameter and material, then fine‑tune by sound and chip shape.",
-      "If you see burning or dust, increase feed or lower RPM so the tool takes a real chip instead of rubbing.",
-      "Keep depth per pass reasonable – too deep a cut overloads the tool even if RPM and feed look correct.",
+      "Start from the machine maker’s parameter chart for your wattage and material, then adjust in small steps by edge finish.",
+      "If edges are yellow, rough, or full of dross, reduce speed, check gas pressure, or verify focus height and nozzle condition.",
+      "For thick plate, use multiple passes or higher assist pressure rather than max power alone — quality and nozzle life improve.",
     ],
   },
   {
@@ -40,9 +40,9 @@ const resources = [
     icon: Lightbulb,
     description: "Best practices and tricks",
     answerPoints: [
-      "Keep collets and tapers spotless; a dirty collet can ruin accuracy even with a new machine and tool.",
-      "Use consistent workholding: vacuum or clamps that do not move, to prevent chatter and broken bits.",
-      "Log your successful recipes (material, tool, RPM, feed, depth) – this becomes your own CNC ‘playbook’.",
+      "Clean lenses only with approved wipes and fluid; fingerprints and dust on optics reduce power and ruin cut quality.",
+      "Keep sheet flat with strong clamps or a good vacuum bed — even slight lift causes inconsistent focus and bad kerf.",
+      "Log successful jobs (material, thickness, power, speed, gas, nozzle) — your own laser ‘recipe book’ saves setup time.",
     ],
   },
 ];

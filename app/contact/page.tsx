@@ -1,4 +1,5 @@
 import Layout from "@/components/Layout";
+import { buildPageMetadata } from "@/lib/seo";
 import { getUrlWithScheme } from "@/lib/getUrlWithScheme";
 import { headers } from "next/headers";
 import { Button } from "@/components/ui/button";
@@ -7,6 +8,13 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Mail, Phone, MapPin, Clock, Send, MessageSquare } from "lucide-react";
 import Link from "next/link";
+
+export const metadata = buildPageMetadata({
+  title: "Contact Krallaser | Laser Machine Sales & Parts",
+  description:
+    "Contact Krallaser for laser cutting machines and parts in Pakistan. Phone, WhatsApp, email, and Lahore showroom — expert help with machines and spare parts.",
+  path: "/contact",
+});
 
 const ContactPage = async () => {
   const Headers = await headers();
@@ -55,10 +63,10 @@ const ContactPage = async () => {
                     <div>
                       <h3 className="font-semibold text-slate-900">Email</h3>
                       <a
-                        href={`mailto:${contact?.email || "cnckral@gmail.com"}`}
+                        href={`mailto:${contact?.email || "krallaser@gmail.com"}`}
                         className="text-slate-600 hover:text-slate-900 transition-colors mt-1 block"
                       >
-                        {contact?.email || "cnckral@gmail.com"}
+                        {contact?.email || "krallaser@gmail.com"}
                       </a>
                     </div>
                   </div>

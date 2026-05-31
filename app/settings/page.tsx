@@ -1,13 +1,16 @@
-import type { Metadata } from "next"
 import AllSettings from "@/modules/AllSettings";
 import { headers } from "next/headers";
 import { getUrlWithScheme } from "@/lib/getUrlWithScheme";
 import Layout from "@/components/Layout";
 
-export const metadata: Metadata = {
-    title: "Account Settings | EasyShop",
-    description: "Manage your account settings and preferences",
-}
+import { buildPageMetadata } from "@/lib/seo";
+
+export const metadata = buildPageMetadata({
+    title: "Account Settings",
+    description: "Manage your Krallaser account settings.",
+    path: "/settings",
+    noIndex: true,
+});
 
 export default async function Settings() {
 

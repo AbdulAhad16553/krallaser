@@ -247,7 +247,7 @@ const CategoriesContent = ({
                     >
                       <div className="bg-slate-50/80 rounded-xl overflow-hidden border border-slate-200/80 hover:border-slate-300 hover:shadow-lg hover:shadow-slate-200/50 transition-all duration-300 aspect-[260/185] flex items-center justify-center p-4">
                         <ProductImagePreview
-                          itemName={product.sku}
+                          itemName={product.name}
                           productName={product.name}
                           imageUrl={imageUrl}
                           hasImage={productHasImage}

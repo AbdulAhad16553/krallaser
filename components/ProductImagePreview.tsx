@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import Image from 'next/image';
 import { X, ZoomIn } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
+import { productImageAlt } from '@/lib/productSeo';
 
 interface ProductImagePreviewProps {
   itemName: string;
@@ -37,6 +38,7 @@ export const ProductImagePreview: React.FC<ProductImagePreviewProps> = ({
 }) => {
   const [previewImage, setPreviewImage] = useState<string | null>(null);
   const [previewAlt, setPreviewAlt] = useState<string>('');
+  const seoAlt = productImageAlt(productName || itemName);
   
   // Helper function to open image preview (same as product detail)
   const openImagePreview = (imagePath: string | undefined, alt: string) => {
@@ -58,23 +60,24 @@ export const ProductImagePreview: React.FC<ProductImagePreviewProps> = ({
   if (hasValidImageUrl) {
     return (
     <>
-      <div className={`relative group ${className}`}>
+      <figure className={`relative group ${className}`}>
         <div className="relative w-full h-full">
           <Image
             src={imageUrl}
-            alt={productName}
+            alt={seoAlt}
             {...(fill
               ? { fill: true, sizes: '100vw' }
               : { width, height }
             )}
             className={`${objectFit === 'contain' ? 'object-contain' : 'object-cover'} cursor-pointer transition-transform group-hover:scale-105`}
-            onClick={() => openImagePreview(imageUrl, productName)}
+            onClick={() => openImagePreview(imageUrl, seoAlt)}
           />
           <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-all duration-200 flex items-center justify-center">
             <ZoomIn className="h-6 w-6 text-white opacity-0 group-hover:opacity-100 transition-opacity duration-200" />
           </div>
         </div>
-      </div>
+        <figcaption className="sr-only">{seoAlt}</figcaption>
+      </figure>
 
       {/* Image Preview Modal - Exact same as product detail page */}
       {previewImage && (

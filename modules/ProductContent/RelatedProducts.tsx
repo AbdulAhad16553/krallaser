@@ -8,6 +8,7 @@ import { Star, ShoppingCart, Eye, Heart } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { getOptimizedImageUrl, IMAGE_SIZES } from "@/lib/imageUtils";
+import { productImageAlt, getProductDisplayName } from "@/lib/productSeo";
 import {
   formatPrice,
   getEffectivePrice,
@@ -54,6 +55,8 @@ const RelatedProducts = ({
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {relatedProducts.map((product) => {
+          const displayName = getProductDisplayName(product);
+          const imageAlt = productImageAlt(displayName);
           const featuredImage = product.product_images?.find(
             (img: any) => img.position === "featured"
           );
@@ -79,7 +82,7 @@ const RelatedProducts = ({
                         featuredImage?.image_id,
                         IMAGE_SIZES.PRODUCT_CARD
                       )}
-                      alt={product.name}
+                      alt={imageAlt}
                       fill
                       className="object-cover group-hover:scale-105 transition-transform duration-300"
                       sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 25vw"

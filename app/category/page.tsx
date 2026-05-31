@@ -2,11 +2,19 @@ import Categories from "@/modules/Categories";
 import Layout from "@/components/Layout";
 import { getAllCategories } from "@/hooks/getCategories";
 import { getUrlWithScheme } from "@/lib/getUrlWithScheme";
+import { buildPageMetadata } from "@/lib/seo";
 import { headers } from "next/headers";
 import React from "react";
 import { ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
+
+export const metadata = buildPageMetadata({
+  title: "Laser Machine & Parts Categories",
+  description:
+    "Browse categories of laser cutting machines, parts, lenses, nozzles, and accessories at Krallaser Pakistan.",
+  path: "/category",
+});
 
 const AllCategories = async () => {
   const Headers = await headers();
@@ -26,58 +34,24 @@ const AllCategories = async () => {
   return (
     <Layout>
       <div className="min-h-screen bg-white">
-        <div className="page-container py-12 lg:py-16">
-          <nav className="mb-4">
-            <p className="text-sm text-slate-500">
-              You are here:{" "}
-              <Link href="/" className="text-slate-600 hover:text-slate-900 transition-colors">Home</Link>
-              <span className="mx-1">»</span>
-              <span className="text-slate-900 font-medium">Product Categories</span>
-            </p>
-          </nav>
-
-          <h1 className="text-3xl md:text-4xl font-bold text-slate-900 mb-2">
-            Product Categories – Browse
-          </h1>
-          <div className="h-px bg-slate-200 mb-8" />
-
-          <div className="mb-10 max-w-4xl">
-            <p className="text-slate-700 leading-relaxed">
-              Explore our comprehensive range of products organized into convenient categories. 
-              Find exactly what you&apos;re looking for with our intuitive navigation.
-            </p>
-          </div>
-
-          <div className="mb-12">
-            <Categories subcat={false} categories={categories} hideOnPage={true} />
-          </div>
-
-          <div className="text-center">
-            <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-8 max-w-2xl mx-auto">
-              <h2 className="text-xl font-semibold text-slate-900 mb-3">
-                Can&apos;t find what you need?
-              </h2>
-              <p className="text-slate-600 mb-6">
-                Browse all products or contact our team for assistance.
+        <div className="page-container py-8 lg:py-10">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
+            <div>
+              <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight">
+                Shop by category
+              </h1>
+              <p className="mt-2 text-muted-foreground">
+                Laser cutting machines, parts, and accessories
               </p>
-              <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                <Link href="/machine">
-                  <Button
-                    className="text-white px-8 py-3 rounded-lg shadow-soft hover:shadow-soft-lg transition-all"
-                    style={{ backgroundColor: "var(--primary-color)" }}
-                  >
-                    Browse All Products
-                    <ArrowRight className="h-5 w-5 ml-2" />
-                  </Button>
-                </Link>
-                <Link href="/contact">
-                  <Button variant="outline" className="px-8 py-3 rounded-lg border-slate-300 hover:bg-slate-50">
-                    Contact Support
-                  </Button>
-                </Link>
-              </div>
             </div>
+            <Link href="/shop">
+              <Button variant="outline" className="gap-2">
+                View all products
+                <ArrowRight className="h-4 w-4" />
+              </Button>
+            </Link>
           </div>
+          <Categories categories={categories} hideOnPage={false} subcat={false} />
         </div>
       </div>
     </Layout>

@@ -1,4 +1,4 @@
-// const CACHE_NAME = "cnckral-pwa-v1";
+// const CACHE_NAME = "krallaser-pwa-v1";
 
 // const URLS_TO_CACHE = [
 //   "/",

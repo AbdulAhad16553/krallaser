@@ -1,13 +1,14 @@
-import type { Metadata } from "next";
 import Link from "next/link";
 import Layout from "@/components/Layout";
 import { blogArticles } from "@/lib/blogArticles";
+import { buildPageMetadata } from "@/lib/seo";
 
-export const metadata: Metadata = {
-  title: "Blog | CNC Guides, Buying Tips & Industry Insights",
+export const metadata = buildPageMetadata({
+  title: "Laser Guides: 1kW–3kW Prices, Importers, Solar & Cypcut",
   description:
-    "Articles on CNC routers, CNC bits, buying guides, and industrial equipment in Pakistan. From CNC Kral—your CNC router and tools supplier.",
-};
+    "Krallaser blog: 1kW–3kW fiber laser prices, Chinese metal laser importers (Cypcut, Weihong, MAX), laser cutting services (not wood CNC), single-phase & solar, sheet/tube/mark/weld in Pakistan.",
+  path: "/blog",
+});
 
 export default function BlogPage() {
   return (
@@ -16,11 +17,12 @@ export default function BlogPage() {
         <div className="page-container py-10 lg:py-14">
           <header className="mb-10">
             <h1 className="text-3xl font-bold text-slate-900 tracking-tight">
-              Blog
+              Laser Cutting Machine Guides
             </h1>
             <p className="mt-2 text-slate-600 max-w-2xl">
-              Guides, buying tips, and insights on CNC routers, bits, and
-              industrial equipment in Pakistan.
+              1kW–3kW fiber laser prices, Chinese importers (Cypcut, Weihong, MAX),
+              metal laser cutting (not wood CNC), single-phase &amp; solar, and sheet/tube/mark/weld
+              machines in Pakistan.
             </p>
           </header>
 

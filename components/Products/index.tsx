@@ -195,7 +195,7 @@ const Products = ({
                 {/* Product Image */}
                 <div className="w-32 h-32 flex-shrink-0">
                   <ProductImagePreview
-                    itemName={product.sku}
+                    itemName={product.name}
                     productName={product.name}
                     imageUrl={imageUrl}
                     hasImage={productHasImage}
@@ -376,7 +376,7 @@ const Products = ({
                   </div>
 
                   <ProductImagePreview
-                    itemName={product.sku}
+                    itemName={product.name}
                     productName={product.name}
                     imageUrl={imageUrl}
                     hasImage={productHasImage}

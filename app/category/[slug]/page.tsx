@@ -5,8 +5,20 @@ import { getCatProducts } from '@/hooks/getCatProducts';
 import CategoriesContent from '@/modules/CategoriesContent';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
+import type { Metadata } from 'next';
+import { buildPageMetadata } from '@/lib/seo';
 
 type Params = Promise<{ slug: string }>;
+
+export async function generateMetadata({ params }: { params: Params }): Promise<Metadata> {
+  const { slug } = await params;
+  const name = decodeURIComponent(slug).replace(/-/g, ' ');
+  return buildPageMetadata({
+    title: `${name} | Laser Products`,
+    description: `Shop ${name} laser cutting machines and parts at Krallaser Pakistan. Browse products with Lahore support and delivery.`,
+    path: `/category/${slug}`,
+  });
+}
 
 export default async function CategoryPage({ params }: { params: Params }) {
     const { slug: categorySlug } = await params;

@@ -1,16 +1,16 @@
 {
-  "name": "CNC KRAL",
-  "short_name": "CNC KRAL",
+  "name": "Krallaser",
+  "short_name": "Krallaser",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#ffffff",
-  "theme_color": "#0368E5",
-  "description": "CNC KRAL - Best CNC supplier in Pakistan for CNC machines, routers, bits and marble tools.",
+  "theme_color": "#e60001",
+  "description": "Krallaser — laser cutting and CNC equipment in Pakistan.",
   "icons": [
     {
-      "src": "/cnc_kral.png",
+      "src": "/krallaser.jpeg",
       "sizes": "512x512",
-      "type": "image/png"
+      "type": "image/jpeg"
     }
   ]
 }

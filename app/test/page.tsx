@@ -31,24 +31,6 @@ export default function TestPage() {
     }
   };
 
-  const testCompanies = async () => {
-    setLoading(true);
-    setResult(null);
-    
-    try {
-      const response = await fetch("/api/test-companies");
-      const data = await response.json();
-      setResult(data);
-    } catch (error: any) {
-      setResult({
-        success: false,
-        message: error.message
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
-
   const testQuotationFlow = async () => {
     setLoading(true);
     setResult(null);
@@ -90,7 +72,7 @@ export default function TestPage() {
     <div className="max-w-4xl mx-auto p-6 space-y-6">
       <h1 className="text-3xl font-bold">API Testing Dashboard</h1>
       
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Customer Creation Test */}
         <Card>
           <CardHeader>
@@ -112,32 +94,6 @@ export default function TestPage() {
                 </>
               ) : (
                 "Test Customer Creation"
-              )}
-            </Button>
-          </CardContent>
-        </Card>
-
-        {/* Companies Test */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Test Companies</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <p className="text-sm text-gray-600">
-              Check what companies are available in ERPNext
-            </p>
-            <Button 
-              onClick={testCompanies}
-              disabled={loading}
-              className="w-full bg-green-600 hover:bg-green-700"
-            >
-              {loading ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Testing...
-                </>
-              ) : (
-                "Test Companies"
               )}
             </Button>
           </CardContent>

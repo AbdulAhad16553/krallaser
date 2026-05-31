@@ -6,6 +6,8 @@ import { NeedHelpSection } from "@/components/NeedHelpSection";
 import { ResourceLinks } from "@/components/ResourceLinks";
 import { NewsletterSection } from "@/components/NewsletterSection";
 import AEOFAQSection from "@/components/AEOFAQSection";
+import HomeSeoIntro from "@/components/HomeSeoIntro";
+import JsonLd from "@/components/JsonLd";
 import { headers } from "next/headers";
 import { getUrlWithScheme } from "@/lib/getUrlWithScheme";
 import { Suspense } from "react";
@@ -14,6 +16,13 @@ import HomeProducts from "@/components/Products/HomeProducts";
 import ProductSkeleton from "@/common/Skeletons/Products";
 import { getCategories } from "@/hooks/getCategories";
 import { getStorePage } from "@/hooks/getStorePage";
+import {
+  DEFAULT_DESCRIPTION,
+  DEFAULT_KEYWORDS,
+  DEFAULT_TITLE,
+  SITE_URL,
+  buildWebPageSchema,
+} from "@/lib/seo";
 
 export async function generateMetadata() {
   const Headers = await headers();
@@ -37,24 +46,21 @@ export async function generateMetadata() {
     !rawDescription ||
     /^home\s*-\s*store\s*page$/i.test(rawDescription);
 
-  const title = isGenericHomeTitle
-    ? "CNC KRAL | Best CNC Supplier, CNC Machine, Router, Bits & Marble Tools in Pakistan"
-    : rawTitle;
-  const description = isGenericHomeDescription
-    ? "CNC KRAL is the best CNC supplier in Pakistan. CNC machines, CNC routers, CNC bits, marble tools. Lahore."
-    : rawDescription;
+  const title = isGenericHomeTitle ? DEFAULT_TITLE : rawTitle;
+  const description = isGenericHomeDescription ? DEFAULT_DESCRIPTION : rawDescription;
 
   return {
-    title,
+    title: isGenericHomeTitle ? { absolute: DEFAULT_TITLE } : title,
     description,
-    generator: data?.store?.stores?.[0]?.store_name || "CNC KRAL",
-    applicationName: data?.store?.stores?.[0]?.store_name || "CNC KRAL",
-    keywords: "best CNC supplier Pakistan, best CNC machine Pakistan, best CNC router Pakistan, CNC bits, marble tools",
+    alternates: { canonical: SITE_URL },
+    generator: data?.store?.stores?.[0]?.store_name || "Krallaser",
+    applicationName: data?.store?.stores?.[0]?.store_name || "Krallaser",
+    keywords: DEFAULT_KEYWORDS.join(", "),
     openGraph: {
       title,
       description,
-      url: "https://cnckral.com",
-      siteName: "CNC KRAL",
+      url: SITE_URL,
+      siteName: "Krallaser",
       type: "website",
       locale: "en_PK",
     },
@@ -251,7 +257,7 @@ export default async function Home() {
           <Hero
             content={{
               title: "Laser Technology That Defines Excellence",
-              content: "At CNC KRAL, we combine cutting-edge technology with unmatched craftsmanship to deliver precise, flawless laser cutting for metal, wood, acrylic, and more.",
+              content: "At Krallaser, we import metal fiber laser cutting machines and genuine spare parts—1kW–3kW systems for steel and aluminum fabrication across Pakistan.",
               heroImage: undefined,
             }}
             storeData={data?.store?.stores[0]}
@@ -291,7 +297,16 @@ export default async function Home() {
           </AnimatedSection>
         </div>
 
-        {/* AEO FAQ - Answer Engine Optimization for AI/LLM visibility */}
+        <HomeSeoIntro />
+
+        <JsonLd
+          data={buildWebPageSchema({
+            name: DEFAULT_TITLE,
+            description: DEFAULT_DESCRIPTION,
+            url: SITE_URL,
+          })}
+        />
+
         <AEOFAQSection />
 
         {/* Newsletter */}

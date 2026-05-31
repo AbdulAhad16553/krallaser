@@ -10,7 +10,16 @@ interface ProductPageProps {
   params: Promise<{ slug: string }>;
 }
 
-const SITE_URL = "https://cnckral.com";
+import { getErpnextImageUrl } from "@/lib/erpnextImageUtils";
+import {
+  getProductDisplayName,
+  productImageAlt,
+  productMetaDescription,
+  productMetadataTitle,
+  productPageTitle,
+} from "@/lib/productSeo";
+import ProductPageJsonLd from "@/components/ProductPageJsonLd";
+import { SITE_URL } from "@/lib/seo";
 
 export async function generateMetadata({ params }: ProductPageProps): Promise<Metadata> {
   const { slug } = await params;
@@ -25,42 +34,56 @@ export async function generateMetadata({ params }: ProductPageProps): Promise<Me
     };
   }
 
-  const productName = product.item_name || product.name || decodedSlug;
+  const productName = getProductDisplayName(product) || decodedSlug;
   const productTags: string[] = Array.isArray((product as any).tags) ? (product as any).tags : [];
   const productDescription =
     product.description?.trim() ||
-    `${productName} from CNC KRAL. Contact us for specifications, pricing, and availability in Pakistan.`;
+    productMetaDescription(productName, product.item_group);
   const canonicalPath = `/product/${encodeURIComponent(decodedSlug)}`;
-  const imageUrl = product.image
-    ? (product.image.startsWith("http") ? product.image : `${SITE_URL}${product.image}`)
-    : `${SITE_URL}/cnc_kral.png`;
+  const imagePath =
+    (product as { website_image?: string }).website_image || product.image;
+  const imageUrl =
+    imagePath && getErpnextImageUrl(imagePath) !== "/placeholder.svg"
+      ? getErpnextImageUrl(imagePath)
+      : `${SITE_URL}/krallogo.svg`;
+  const imageAlt = productImageAlt(productName);
 
   return {
-    title: productName,
+    title: productMetadataTitle(productName),
     description: productDescription,
     keywords: [
       productName,
       product.item_group,
       ...productTags,
-      "CNC KRAL",
-      "CNC Pakistan",
+      "Krallaser",
+      "laser cutting machine Pakistan",
+      "laser cutter parts",
       "Lahore",
     ].filter(Boolean),
     alternates: {
-      canonical: canonicalPath,
+      canonical: `${SITE_URL}${canonicalPath}`,
     },
     openGraph: {
       type: "website",
-      title: productName,
+      title: productPageTitle(productName),
       description: productDescription,
       url: `${SITE_URL}${canonicalPath}`,
-      images: [{ url: imageUrl, alt: productName }],
+      siteName: "Krallaser",
+      images: [
+        {
+          url: imageUrl,
+          width: 1200,
+          height: 1200,
+          alt: imageAlt,
+          type: "image/jpeg",
+        },
+      ],
     },
     twitter: {
       card: "summary_large_image",
-      title: productName,
+      title: productPageTitle(productName),
       description: productDescription,
-      images: [imageUrl],
+      images: { url: imageUrl, alt: imageAlt },
     },
   };
 }
@@ -82,5 +105,10 @@ export default async function ProductPage({ params }: ProductPageProps) {
 async function ProductDetailContentWithData({ slug }: { slug: string }) {
   const product = await fetchProductBySlug(slug);
   if (!product) notFound();
-  return <ProductDetailContent slug={slug} initialProduct={product} />;
+  return (
+    <>
+      <ProductPageJsonLd product={product} />
+      <ProductDetailContent slug={slug} initialProduct={product} />
+    </>
+  );
 }

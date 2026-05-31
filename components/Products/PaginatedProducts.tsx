@@ -384,7 +384,7 @@ const PaginatedProducts: React.FC<PaginatedProductsProps> = ({
                   {/* Image at top with tall frame – fit inside card, no overflow */}
                   <div className="w-full h-64 sm:h-80 bg-slate-50 border-b overflow-hidden flex items-center justify-center">
                     <ProductImagePreview
-                      itemName={product.sku}
+                      itemName={product.name}
                       productName={product.name}
                       imageUrl={imageUrl}
                       hasImage={productHasImage}
@@ -556,7 +556,7 @@ const PaginatedProducts: React.FC<PaginatedProductsProps> = ({
                 {/* Product Image */}
                 <div className="w-32 h-32 flex-shrink-0">
                   <ProductImagePreview
-                    itemName={product.sku}
+                    itemName={product.name}
                     productName={product.name}
                     imageUrl={imageUrl}
                     hasImage={productHasImage}
@@ -737,7 +737,7 @@ const PaginatedProducts: React.FC<PaginatedProductsProps> = ({
                   </div>
 
                   <ProductImagePreview
-                    itemName={product.sku}
+                    itemName={product.name}
                     productName={product.name}
                     imageUrl={imageUrl}
                     hasImage={productHasImage}
