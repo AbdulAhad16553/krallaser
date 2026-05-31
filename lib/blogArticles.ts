@@ -63,7 +63,7 @@ Shop machines and request quotes at krallaser.com or krallaser.com/shop.`,
 
 CO2 lasers are a different technology for acrylic, wood, and engraving—**not sold by Krallaser**. If your search is for a wood CNC router, that is not a fiber laser metal cutter.
 
-Krallaser imports **fiber metal cutting machines** (1kW–3kW+), Cypcut/Weihong packages, and matched spare parts. Contact Krallaser in Lahore for steel/aluminum demos and quotes.
+Krallaser imports **fiber metal cutting machines** (1kW–3kW+), Cypcut/Weihong packages, and matched spare parts. Contact Krallaser in Lahore for steel/aluminum demos and quotes.`,
   },
   {
     slug: "laser-cutting-machine-parts-guide",
