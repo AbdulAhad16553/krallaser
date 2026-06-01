@@ -1,12 +1,10 @@
 import Layout from "@/components/Layout";
 import EnhancedShopContent from "@/modules/ShopContent/EnhancedShopContent";
-import { getAllCategories } from "@/hooks/getCategories";
 import { buildPageMetadata } from "@/lib/seo";
+import { prefetchCatalogProducts } from "@/lib/prefetchCatalogProducts";
 import { headers } from "next/headers";
-import { getUrlWithScheme } from "@/lib/getUrlWithScheme";
 
-export const dynamic = "force-dynamic";
-export const revalidate = 0;
+export const revalidate = 60;
 
 export const metadata = buildPageMetadata({
   title: "1kW–3kW Fiber Laser Machines for Sale in Pakistan",
@@ -31,33 +29,17 @@ export default async function MachinePage() {
   const storeId = "default-store";
   const companyId = "Krallaser";
   const storeCurrency = "PKR";
-  const categoriesRes = await getAllCategories(storeId);
-  const { categories } = categoriesRes;
   const host = (await headers()).get("host");
-
-  let initialProducts: any[] = [];
-  if (host) {
-    const fullStoreUrl = getUrlWithScheme(host);
-    try {
-      const response = await fetch(
-        `${fullStoreUrl}/api/products?page=1&limit=500&mode=machine`,
-        { next: { revalidate: 60 } }
-      );
-      if (response.ok) {
-        const data = await response.json();
-        initialProducts = Array.isArray(data?.products) ? data.products : [];
-      }
-    } catch (error) {
-      console.error("Machine page initial products fetch failed:", error);
-    }
-  }
+  const initialProducts = host
+    ? await prefetchCatalogProducts(host, { mode: "machine", limit: 48 })
+    : [];
 
   return (
     <Layout>
       <div className="min-h-screen bg-slate-50/50">
         <div className="page-container py-8 lg:py-10">
           <EnhancedShopContent
-            categories={categories}
+            categories={[]}
             hideOnPage={true}
             storeCurrency={storeCurrency}
             initialProducts={initialProducts}

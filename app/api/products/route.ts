@@ -14,12 +14,13 @@ export async function GET(request: NextRequest) {
     const page = parseInt(searchParams.get('page') || '1');
     const limit = parseInt(searchParams.get('limit') || '12');
     const mode = searchParams.get('mode') || 'all'; // machine | parts | all
+    const light = searchParams.get('light') === '1';
     const nocache = searchParams.get('nocache') === '1' || searchParams.get('bust') === '1';
     const offset = (page - 1) * limit;
 
     const quoteFilter = mode === 'machine' ? 1 : mode === 'parts' ? 0 : undefined;
     
-    const cacheKey = `products-page-${page}-limit-${limit}-mode-${mode}`;
+    const cacheKey = `products-page-${page}-limit-${limit}-mode-${mode}-light-${light ? 1 : 0}`;
     const cachedProducts = nocache ? null : productCache.get(cacheKey);
     
     if (cachedProducts) {
@@ -50,53 +51,58 @@ export async function GET(request: NextRequest) {
     );
     const allItemCodes = [...new Set([...productCodes, ...variantCodes])];
 
-    // Fetch prices per item (batch "in" filter may not work in all ERPNext versions)
-    const pricePromises = allItemCodes.map(async (itemCode) => {
-      const cacheKey = `price-${itemCode}`;
-      const cached = priceCache.get(cacheKey);
-      if (cached) return { itemCode, price: cached };
-      try {
-        const { data: prices } = await erpnextClient.getList<any>(
-          "Item Price",
-          { item_code: itemCode },
-          ["price_list_rate", "currency"],
-          1
-        );
-        const priceData = prices && prices.length > 0
-          ? { price_list_rate: prices[0].price_list_rate || 0, currency: prices[0].currency || 'PKR' }
-          : { price_list_rate: 0, currency: 'PKR' };
-        priceCache.set(cacheKey, priceData, 15 * 60 * 1000);
-        return { itemCode, price: priceData };
-      } catch {
-        return { itemCode, price: { price_list_rate: 0, currency: 'PKR' } };
-      }
-    });
+    let priceMap = new Map<string, { price_list_rate: number; currency: string }>();
+    let stockMap = new Map<string, { totalStock: number; bins: any[] } | null>();
 
-    // Fetch stock per item (reliable across ERPNext versions)
-    const stockPromises = allItemCodes.map(async (itemCode) => {
-      const ckey = `stock-${itemCode}`;
-      const cached = stockCache.get(ckey);
-      // Only use cache when we have a definite cached result (truthy = has stock data; we don't cache null to avoid ambiguity)
-      if (cached !== null && cached !== undefined) return { itemCode, stock: cached };
-      try {
-        const { data: stockData } = await erpnextClient.getItemStock(itemCode);
-        const stockInfo = stockData && stockData.length > 0
-          ? { totalStock: stockData.reduce((t: number, b: any) => t + (b.actual_qty || 0), 0), bins: stockData }
-          : null;
-        stockCache.set(ckey, stockInfo, 2 * 60 * 1000);
-        return { itemCode, stock: stockInfo };
-      } catch {
-        return { itemCode, stock: null };
-      }
-    });
+    if (!light) {
+      // Fetch prices per item (batch "in" filter may not work in all ERPNext versions)
+      const pricePromises = allItemCodes.map(async (itemCode) => {
+        const cacheKey = `price-${itemCode}`;
+        const cached = priceCache.get(cacheKey);
+        if (cached) return { itemCode, price: cached };
+        try {
+          const { data: prices } = await erpnextClient.getList<any>(
+            "Item Price",
+            { item_code: itemCode },
+            ["price_list_rate", "currency"],
+            1
+          );
+          const priceData = prices && prices.length > 0
+            ? { price_list_rate: prices[0].price_list_rate || 0, currency: prices[0].currency || 'PKR' }
+            : { price_list_rate: 0, currency: 'PKR' };
+          priceCache.set(cacheKey, priceData, 15 * 60 * 1000);
+          return { itemCode, price: priceData };
+        } catch {
+          return { itemCode, price: { price_list_rate: 0, currency: 'PKR' } };
+        }
+      });
 
-    const [priceResults, stockResults] = await Promise.all([
-      Promise.all(pricePromises),
-      Promise.all(stockPromises),
-    ]);
+      // Fetch stock per item (reliable across ERPNext versions)
+      const stockPromises = allItemCodes.map(async (itemCode) => {
+        const ckey = `stock-${itemCode}`;
+        const cached = stockCache.get(ckey);
+        // Only use cache when we have a definite cached result (truthy = has stock data; we don't cache null to avoid ambiguity)
+        if (cached !== null && cached !== undefined) return { itemCode, stock: cached };
+        try {
+          const { data: stockData } = await erpnextClient.getItemStock(itemCode);
+          const stockInfo = stockData && stockData.length > 0
+            ? { totalStock: stockData.reduce((t: number, b: any) => t + (b.actual_qty || 0), 0), bins: stockData }
+            : null;
+          stockCache.set(ckey, stockInfo, 2 * 60 * 1000);
+          return { itemCode, stock: stockInfo };
+        } catch {
+          return { itemCode, stock: null };
+        }
+      });
 
-    const priceMap = new Map(priceResults.map((r) => [r.itemCode, r.price]));
-    const stockMap = new Map(stockResults.map((r) => [r.itemCode, r.stock]));
+      const [priceResults, stockResults] = await Promise.all([
+        Promise.all(pricePromises),
+        Promise.all(stockPromises),
+      ]);
+
+      priceMap = new Map(priceResults.map((r) => [r.itemCode, r.price]));
+      stockMap = new Map(stockResults.map((r) => [r.itemCode, r.stock]));
+    }
 
     // Transform ERPNext products to match frontend interface
     const transformedProducts = products.map((product, index) => {
@@ -110,24 +116,28 @@ export async function GET(request: NextRequest) {
         rawEnableQuote === "1" ||
         rawEnableQuote === 1 ||
         rawEnableQuote === "Yes";
-      // Get price from lookup map (O(1) access)
-      const priceData = priceMap.get(product.name) || { price_list_rate: product.standard_rate || 0, currency: 'PKR' };
+      // Get price from lookup map (O(1) access) or standard_rate in light mode
+      const priceData = light
+        ? { price_list_rate: product.standard_rate || 0, currency: 'PKR' }
+        : priceMap.get(product.name) || { price_list_rate: product.standard_rate || 0, currency: 'PKR' };
       const itemPrice = Number(priceData.price_list_rate) || 0;
       const currency = priceData.currency || 'PKR';
 
-      // Get stock information from lookup map (O(1) access)
-      const stockInfo = stockMap.get(product.name) || null;
+      // Get stock information from lookup map (O(1) access); skipped in light mode
+      const stockInfo = light ? null : stockMap.get(product.name) || null;
       
       // Handle variations (using lookup maps for O(1) access)
       let variations = [];
       if (product.has_variants && (product as any).variants) {
         variations = (product as any).variants.map((variant: any) => {
           // Get variant price from lookup map
-          const variantPriceData = priceMap.get(variant.name) || { price_list_rate: variant.price || variant.standard_rate || 0, currency: 'PKR' };
+          const variantPriceData = light
+            ? { price_list_rate: variant.price || variant.standard_rate || 0, currency: 'PKR' }
+            : priceMap.get(variant.name) || { price_list_rate: variant.price || variant.standard_rate || 0, currency: 'PKR' };
           const variantPrice = Number(variantPriceData.price_list_rate) || 0;
 
           // Get variant stock from lookup map
-          const variantStockInfo = stockMap.get(variant.name) || null;
+          const variantStockInfo = light ? null : stockMap.get(variant.name) || null;
           
           return {
             id: variant.name,
@@ -208,7 +218,8 @@ export async function GET(request: NextRequest) {
     const totalCountCacheKey = `products-total-count-${mode}`;
     let totalProducts = productCache.get(totalCountCacheKey) as any[] | undefined;
     if (!totalProducts) {
-      const allFiltered = await productService.getProducts(filters, 5000, 0);
+      const countLimit = light ? undefined : 5000;
+      const allFiltered = await productService.getProducts(filters, countLimit, 0);
       totalProducts = allFiltered;
       productCache.set(totalCountCacheKey, totalProducts, 30 * 60 * 1000);
     }

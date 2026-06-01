@@ -76,7 +76,8 @@ const PaginatedProducts: React.FC<PaginatedProductsProps> = ({
     autoLoad: true,
     mode: quoteFilter,
     initialProducts,
-    loadFullCatalog: true,
+    loadFullCatalog: quoteFilter === "all" && initialProducts.length === 0,
+    light: quoteFilter !== "all" || initialProducts.length > 0,
   });
 
   const {

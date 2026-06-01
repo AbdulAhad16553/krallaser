@@ -35,7 +35,10 @@ interface UsePaginatedProductsOptions {
   /**
    * When true (default), loads every page from `/api/products` once so the UI can filter/search on the client.
    */
-  loadFullCatalog?: boolean;
+  /**
+   * When true, skips per-item price/stock ERP calls for faster catalog listing.
+   */
+  light?: boolean;
 }
 
 interface UsePaginatedProductsReturn {
@@ -63,6 +66,7 @@ export const usePaginatedProducts = (
     mode = "all",
     initialProducts = [],
     loadFullCatalog = true,
+    light = false,
   } = options;
 
   const hasInitialProducts = initialProducts.length > 0;
@@ -90,6 +94,7 @@ export const usePaginatedProducts = (
       setError(null);
 
       const modeParam = mode !== "all" ? `&mode=${mode}` : "";
+      const lightParam = light ? "&light=1" : "";
       const nocacheParam =
         process.env.NODE_ENV === "development" ? "&nocache=1" : "";
 
@@ -98,7 +103,7 @@ export const usePaginatedProducts = (
 
       while (true) {
         const response = await fetch(
-          `/api/products?page=${page}&limit=${BATCH_LIMIT}${modeParam}${nocacheParam}`
+          `/api/products?page=${page}&limit=${BATCH_LIMIT}${modeParam}${lightParam}${nocacheParam}`
         );
         const data = await response.json();
 
@@ -131,7 +136,7 @@ export const usePaginatedProducts = (
     } finally {
       if (!background) setLoading(false);
     }
-  }, [mode]);
+  }, [mode, light]);
 
   const loadPage = useCallback(
     async (page: number) => {
@@ -154,10 +159,11 @@ export const usePaginatedProducts = (
         }
 
         const modeParam = mode !== "all" ? `&mode=${mode}` : "";
+        const lightParam = light ? "&light=1" : "";
         const nocacheParam =
           process.env.NODE_ENV === "development" ? "&nocache=1" : "";
         const response = await fetch(
-          `/api/products?page=${page}&limit=${pageSize}${modeParam}${nocacheParam}`
+          `/api/products?page=${page}&limit=${pageSize}${modeParam}${lightParam}${nocacheParam}`
         );
         const data = await response.json();
 
@@ -179,7 +185,7 @@ export const usePaginatedProducts = (
         setLoading(false);
       }
     },
-    [loadFullCatalog, loadFullCatalogFn, pageSize, mode]
+    [loadFullCatalog, loadFullCatalogFn, pageSize, mode, light]
   );
 
   const loadNextPage = useCallback(async () => {
@@ -201,10 +207,11 @@ export const usePaginatedProducts = (
       }
 
       const modeParam = mode !== "all" ? `&mode=${mode}` : "";
+      const lightParam = light ? "&light=1" : "";
       const nocacheParam =
         process.env.NODE_ENV === "development" ? "&nocache=1" : "";
       const response = await fetch(
-        `/api/products?page=${nextPage}&limit=${pageSize}${modeParam}${nocacheParam}`
+        `/api/products?page=${nextPage}&limit=${pageSize}${modeParam}${lightParam}${nocacheParam}`
       );
       const data = await response.json();
 
@@ -227,7 +234,7 @@ export const usePaginatedProducts = (
     } finally {
       setIsLoadingMore(false);
     }
-  }, [loadFullCatalog, pagination, pageSize, isLoadingMore, mode]);
+  }, [loadFullCatalog, pagination, pageSize, isLoadingMore, mode, light]);
 
   const loadPrevPage = useCallback(async () => {
     if (!pagination?.hasPrevPage || loadFullCatalog) return;
