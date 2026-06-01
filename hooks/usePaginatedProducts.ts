@@ -31,6 +31,7 @@ interface UsePaginatedProductsOptions {
   pageSize?: number;
   autoLoad?: boolean;
   mode?: "all" | "machine" | "parts";
+  initialProducts?: Product[];
   /**
    * When true (default), loads every page from `/api/products` once so the UI can filter/search on the client.
    */
@@ -60,18 +61,32 @@ export const usePaginatedProducts = (
     pageSize = 12,
     autoLoad = true,
     mode = "all",
+    initialProducts = [],
     loadFullCatalog = true,
   } = options;
 
-  const [products, setProducts] = useState<Product[]>([]);
-  const [pagination, setPagination] = useState<PaginationInfo | null>(null);
-  const [loading, setLoading] = useState(false);
+  const hasInitialProducts = initialProducts.length > 0;
+  const [products, setProducts] = useState<Product[]>(initialProducts);
+  const [pagination, setPagination] = useState<PaginationInfo | null>(
+    hasInitialProducts
+      ? {
+          currentPage: 1,
+          totalPages: 1,
+          totalProducts: initialProducts.length,
+          hasNextPage: false,
+          hasPrevPage: false,
+          limit: initialProducts.length,
+          offset: 0,
+        }
+      : null
+  );
+  const [loading, setLoading] = useState(autoLoad && !hasInitialProducts);
   const [error, setError] = useState<string | null>(null);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
 
-  const loadFullCatalogFn = useCallback(async () => {
+  const loadFullCatalogFn = useCallback(async (background = false) => {
     try {
-      setLoading(true);
+      if (!background) setLoading(true);
       setError(null);
 
       const modeParam = mode !== "all" ? `&mode=${mode}` : "";
@@ -114,7 +129,7 @@ export const usePaginatedProducts = (
       console.error("Error loading catalog:", err);
       setError(err instanceof Error ? err.message : "Failed to load products");
     } finally {
-      setLoading(false);
+      if (!background) setLoading(false);
     }
   }, [mode]);
 
@@ -245,9 +260,13 @@ export const usePaginatedProducts = (
 
   useEffect(() => {
     if (autoLoad) {
-      loadPage(initialPage);
+      if (hasInitialProducts && loadFullCatalog) {
+        loadFullCatalogFn(true);
+      } else if (!hasInitialProducts) {
+        loadPage(initialPage);
+      }
     }
-  }, [autoLoad, initialPage, loadPage]);
+  }, [autoLoad, initialPage, loadPage, hasInitialProducts, loadFullCatalog, loadFullCatalogFn]);
 
   return {
     products,

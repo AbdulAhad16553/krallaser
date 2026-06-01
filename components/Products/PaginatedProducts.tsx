@@ -43,6 +43,7 @@ interface PaginatedProductsProps {
   searchTerm?: string;
   sortBy?: "newest" | "oldest" | "price-low" | "price-high" | "name" | "name-desc";
   quoteFilter?: "all" | "machine" | "parts";
+  initialProducts?: any[];
 }
 
 const PaginatedProducts: React.FC<PaginatedProductsProps> = ({
@@ -58,6 +59,7 @@ const PaginatedProducts: React.FC<PaginatedProductsProps> = ({
   searchTerm = "",
   sortBy = "newest",
   quoteFilter = "all",
+  initialProducts = [],
 }) => {
   const router = useRouter();
   const [performanceMetrics, setPerformanceMetrics] = useState({
@@ -73,6 +75,7 @@ const PaginatedProducts: React.FC<PaginatedProductsProps> = ({
     pageSize,
     autoLoad: true,
     mode: quoteFilter,
+    initialProducts,
     loadFullCatalog: true,
   });
 

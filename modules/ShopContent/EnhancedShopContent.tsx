@@ -23,6 +23,7 @@ interface EnhancedShopContentProps {
   categories?: any[];
   hideOnPage?: boolean;
   mode?: "all" | "machine" | "parts";
+  initialProducts?: any[];
 }
 
 /** Applies ?q= from URL into shop search (header mobile search). */
@@ -41,6 +42,7 @@ const EnhancedShopContent: React.FC<EnhancedShopContentProps> = ({
   categories = [],
   hideOnPage = false,
   mode = "all",
+  initialProducts = [],
 }) => {
   const isMachineMode = mode === "machine";
 
@@ -393,6 +395,7 @@ const EnhancedShopContent: React.FC<EnhancedShopContentProps> = ({
             companyId={necessary.companyId}
             storeId={necessary.storeId}
             storeCurrency={storeCurrency}
+            initialProducts={initialProducts}
             viewMode={viewMode}
             paginationMode={paginationMode}
             pageSize={pageSize}
