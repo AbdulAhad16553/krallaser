@@ -17,8 +17,19 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { toast } from 'sonner';
-import { Lock, ShoppingBag } from 'lucide-react';
+import { Lock, ShoppingBag, Tag, X } from 'lucide-react';
 import Link from 'next/link';
+
+const APPLIED_COUPON_KEY = 'appliedCoupon';
+
+interface AppliedCoupon {
+  code: string;
+  couponName: string;
+  couponTitle?: string;
+  discountAmount: number;
+  discountPercentage?: number;
+  discountType?: 'percentage' | 'amount';
+}
 
 interface OrderSummaryProps {
   storeCurrency: string;
@@ -32,6 +43,9 @@ const OrderSummary = ({ storeCurrency, necessary }: OrderSummaryProps) => {
   const [cartItems, setCartItems] = useState<any[]>([]);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [couponInput, setCouponInput] = useState('');
+  const [appliedCoupon, setAppliedCoupon] = useState<AppliedCoupon | null>(null);
+  const [isApplyingCoupon, setIsApplyingCoupon] = useState(false);
   const [customerForm, setCustomerForm] = useState({
     name: '',
     email: '',
@@ -52,6 +66,13 @@ const OrderSummary = ({ storeCurrency, necessary }: OrderSummaryProps) => {
       }
     };
 
+    try {
+      const stored = sessionStorage.getItem(APPLIED_COUPON_KEY);
+      if (stored) setAppliedCoupon(JSON.parse(stored));
+    } catch {
+      setAppliedCoupon(null);
+    }
+
     handleCartUpdate();
     window.addEventListener('cartUpdated', handleCartUpdate);
     window.addEventListener('storage', handleCartUpdate);
@@ -62,12 +83,72 @@ const OrderSummary = ({ storeCurrency, necessary }: OrderSummaryProps) => {
     };
   }, []);
 
+  const persistCoupon = (coupon: AppliedCoupon | null) => {
+    setAppliedCoupon(coupon);
+    if (coupon) {
+      sessionStorage.setItem(APPLIED_COUPON_KEY, JSON.stringify(coupon));
+    } else {
+      sessionStorage.removeItem(APPLIED_COUPON_KEY);
+    }
+  };
+
   const subtotal = cartItems.reduce((sum, item) => {
     const itemPrice = item.salePrice ?? item.price ?? 0;
     return sum + itemPrice * (item.quantity ?? 1);
   }, 0);
 
-  const total = subtotal;
+  const discount = appliedCoupon?.discountAmount ?? 0;
+  const total = Math.max(0, subtotal - discount);
+
+  const handleApplyCoupon = async () => {
+    const code = couponInput.trim();
+    if (!code) {
+      toast.error('Enter a coupon code');
+      return;
+    }
+
+    setIsApplyingCoupon(true);
+    try {
+      const response = await fetch('/api/coupon', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ code, items: cartItems }),
+      });
+      const data = await response.json();
+
+      if (!response.ok || !data.valid) {
+        throw new Error(data?.message || 'Invalid coupon code');
+      }
+
+      persistCoupon({
+        code: data.couponCode || code.toUpperCase(),
+        couponName: data.couponName,
+        couponTitle: data.couponTitle,
+        discountAmount: data.discountAmount ?? 0,
+        discountPercentage: data.discountPercentage,
+        discountType: data.discountType,
+      });
+      setCouponInput('');
+      toast.success('Coupon applied', {
+        description: data.couponTitle
+          ? `${data.couponTitle} — ${formatPrice(data.discountAmount ?? 0, storeCurrency)} off`
+          : undefined,
+      });
+    } catch (error: any) {
+      persistCoupon(null);
+      toast.error('Coupon not applied', {
+        description: error?.message || 'Please check the code and try again.',
+      });
+    } finally {
+      setIsApplyingCoupon(false);
+    }
+  };
+
+  const handleRemoveCoupon = () => {
+    persistCoupon(null);
+    setCouponInput('');
+    toast.message('Coupon removed');
+  };
 
   const handleInputChange = (field: string, value: string) => {
     setCustomerForm((prev) => ({ ...prev, [field]: value }));
@@ -91,6 +172,30 @@ const OrderSummary = ({ storeCurrency, necessary }: OrderSummaryProps) => {
     setIsSubmitting(true);
 
     try {
+      let couponForOrder = appliedCoupon;
+
+      if (appliedCoupon) {
+        const couponResponse = await fetch('/api/coupon', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ code: appliedCoupon.code, items: cartItems }),
+        });
+        const couponData = await couponResponse.json();
+        if (!couponResponse.ok || !couponData.valid) {
+          persistCoupon(null);
+          throw new Error(couponData?.message || 'Coupon is no longer valid for this cart');
+        }
+        couponForOrder = {
+          code: couponData.couponCode || appliedCoupon.code,
+          couponName: couponData.couponName,
+          couponTitle: couponData.couponTitle,
+          discountAmount: couponData.discountAmount ?? 0,
+          discountPercentage: couponData.discountPercentage,
+          discountType: couponData.discountType,
+        };
+        persistCoupon(couponForOrder);
+      }
+
       const customerResponse = await fetch('/api/customer', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -115,6 +220,15 @@ const OrderSummary = ({ storeCurrency, necessary }: OrderSummaryProps) => {
           shipping: { ...customerForm },
           companyId: necessary?.companyId,
           storeId: necessary?.storeId,
+          coupon: couponForOrder
+            ? {
+                couponName: couponForOrder.couponName,
+                code: couponForOrder.code,
+                discountAmount: couponForOrder.discountAmount,
+                discountPercentage: couponForOrder.discountPercentage,
+                discountType: couponForOrder.discountType,
+              }
+            : undefined,
         }),
       });
 
@@ -130,7 +244,9 @@ const OrderSummary = ({ storeCurrency, necessary }: OrderSummaryProps) => {
       });
 
       sessionStorage.removeItem('cart');
+      sessionStorage.removeItem(APPLIED_COUPON_KEY);
       setCartItems([]);
+      setAppliedCoupon(null);
       window.dispatchEvent(new CustomEvent('cartUpdated'));
       setDialogOpen(false);
     } catch (error: any) {
@@ -197,6 +313,61 @@ const OrderSummary = ({ storeCurrency, necessary }: OrderSummaryProps) => {
 
           <Separator className="bg-slate-100" />
 
+          {/* Coupon code */}
+          <div className="px-4 py-3 sm:px-6 sm:py-4 border-b border-slate-100">
+            {appliedCoupon ? (
+              <div className="flex items-center justify-between gap-2 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2">
+                <div className="flex items-center gap-2 min-w-0">
+                  <Tag className="h-4 w-4 text-emerald-600 shrink-0" />
+                  <div className="min-w-0">
+                    <p className="text-sm font-medium text-emerald-900 truncate">
+                      {appliedCoupon.code}
+                    </p>
+                    {appliedCoupon.couponTitle && (
+                      <p className="text-xs text-emerald-700 truncate">
+                        {appliedCoupon.couponTitle}
+                      </p>
+                    )}
+                  </div>
+                </div>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8 shrink-0 text-emerald-700 hover:text-emerald-900 hover:bg-emerald-100"
+                  onClick={handleRemoveCoupon}
+                  aria-label="Remove coupon"
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              </div>
+            ) : (
+              <div className="flex gap-2">
+                <Input
+                  value={couponInput}
+                  onChange={(e) => setCouponInput(e.target.value.toUpperCase())}
+                  placeholder="Coupon code"
+                  className="h-10 rounded-lg border-slate-200 text-sm uppercase"
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                      handleApplyCoupon();
+                    }
+                  }}
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="h-10 shrink-0 rounded-lg px-4"
+                  onClick={handleApplyCoupon}
+                  disabled={isApplyingCoupon || !couponInput.trim()}
+                >
+                  {isApplyingCoupon ? 'Checking…' : 'Apply'}
+                </Button>
+              </div>
+            )}
+          </div>
+
           <div className="px-4 py-3 space-y-2 sm:px-6 sm:py-4 sm:space-y-3">
             <div className="flex justify-between text-sm">
               <span className="text-slate-600">Subtotal</span>
@@ -204,6 +375,19 @@ const OrderSummary = ({ storeCurrency, necessary }: OrderSummaryProps) => {
                 {formatPrice(subtotal, storeCurrency)}
               </span>
             </div>
+            {discount > 0 && (
+              <div className="flex justify-between text-sm">
+                <span className="text-emerald-700">
+                  Discount
+                  {appliedCoupon?.discountPercentage
+                    ? ` (${appliedCoupon.discountPercentage}%)`
+                    : ''}
+                </span>
+                <span className="font-medium text-emerald-700 tabular-nums">
+                  −{formatPrice(discount, storeCurrency)}
+                </span>
+              </div>
+            )}
             <div className="flex justify-between gap-3 text-sm">
               <span className="text-slate-600">Shipping</span>
               <span className="font-medium text-slate-700 text-right">

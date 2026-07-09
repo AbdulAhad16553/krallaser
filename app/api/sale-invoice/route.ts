@@ -57,7 +57,7 @@ export async function POST(request: Request) {
   }
 
   const body = await request.json().catch(() => null);
-  const { customer, items, shipping, companyId } = body || {};
+  const { customer, items, shipping, companyId, coupon } = body || {};
 
   if (!customer) {
     return NextResponse.json(
@@ -76,7 +76,7 @@ export async function POST(request: Request) {
   const invoiceItems = buildInvoiceItems(items);
   const today = new Date().toISOString().split("T")[0];
 
-  const payload = {
+  const payload: Record<string, unknown> = {
     doctype: "Sales Invoice",
     posting_date: today,
     due_date: today,
@@ -87,8 +87,22 @@ export async function POST(request: Request) {
     contact_mobile: shipping?.phone,
     remarks: `Ship to: ${shipping?.address || "N/A"} ${
       shipping?.city ? `(${shipping.city})` : ""
-    }\nNotes: ${shipping?.notes || "N/A"}`,
+    }\nNotes: ${shipping?.notes || "N/A"}${
+      coupon?.code ? `\nCoupon: ${coupon.code}` : ""
+    }`,
   };
+
+  if (coupon?.couponName) {
+    payload.coupon_code = coupon.couponName;
+  }
+
+  if (coupon?.discountType === "percentage" && coupon.discountPercentage > 0) {
+    payload.additional_discount_percentage = coupon.discountPercentage;
+    payload.apply_discount_on = "Grand Total";
+  } else if (coupon?.discountAmount > 0) {
+    payload.discount_amount = coupon.discountAmount;
+    payload.apply_discount_on = "Grand Total";
+  }
 
   try {
     const response = await fetch(
