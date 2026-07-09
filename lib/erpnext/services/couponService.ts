@@ -305,6 +305,3 @@ export async function validateAndApplyCoupon(
     totalAfterDiscount,
   };
 }
-
-// Re-export for consumers that need promotion types
-export type { ItemPromotion };

@@ -39,6 +39,8 @@ interface Product {
   stock_uom: string;
   description?: string;
   price?: number;
+  base_price?: number;
+  sale_price?: number;
   currency?: string;
   image?: string;
   custom_quotation_item?: number;
@@ -63,6 +65,8 @@ interface Product {
     name: string;
     item_name: string;
     price?: number;
+    base_price?: number;
+    sale_price?: number;
     currency?: string;
     image?: string;
     promotion?: {
