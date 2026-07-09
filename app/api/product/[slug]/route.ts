@@ -90,6 +90,10 @@ import { NextRequest, NextResponse } from 'next/server';
 import { erpnextClient } from '@/lib/erpnext/erpnextClient';
 import { attachProductStockFromErp } from '@/lib/product/attachProductStock';
 import { parseErpTags } from '@/lib/erpnext/tags';
+import {
+  attachPromotionToProduct,
+  getActivePromotionsByItemCode,
+} from '@/lib/erpnext/services/pricingRuleService';
 
 export async function GET(
   request: NextRequest,
@@ -122,11 +126,17 @@ export async function GET(
     await attachProductStockFromErp(product, itemCode);
     const stockInfo = product.stock ?? null;
 
+    const promotions = await getActivePromotionsByItemCode();
+    const productWithPromotion = attachPromotionToProduct(
+      { ...product, item_group: product.item_group },
+      promotions
+    );
+
     return NextResponse.json(
       {
         success: true,
         product: {
-          ...product,
+          ...productWithPromotion,
           stock: stockInfo,
           attachments,
         },

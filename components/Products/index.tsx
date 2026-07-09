@@ -22,6 +22,9 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { ShoppingCart, Heart, Eye, Star } from "lucide-react";
 import { getProductSlug, warmProductNavigation } from "@/lib/productNavigation";
+import { getProductPromotion, hasPromotionalPricing } from "@/lib/promotionUtils";
+import { ProductSaleFlag } from "@/components/Products/PromotionBadge";
+import { PromotionalPriceRow } from "@/components/Products/ProductCardMarketplace";
 import { useRestoreListingScroll } from "@/lib/listScrollRestoration";
 
 interface NecessaryProps {
@@ -157,6 +160,7 @@ const Products = ({
           const effectivePrice = getEffectivePrice(product);
           const productHasDiscount = hasDiscount(product);
           const basePriceForDisplay = getBasePriceForDisplay(product);
+          const promotion = getProductPromotion(product);
           const priceRange = getPriceRange(product);
           const hasVariations = product.product_variations && product.product_variations.length > 0;
 
@@ -193,7 +197,8 @@ const Products = ({
                 />
                 <div className="relative z-[2] flex h-full w-full flex-row pointer-events-none">
                 {/* Product Image */}
-                <div className="w-32 h-32 flex-shrink-0">
+                <div className="relative w-32 h-32 flex-shrink-0">
+                  <ProductSaleFlag product={product} />
                   <ProductImagePreview
                     itemName={product.name}
                     productName={product.name}
@@ -224,7 +229,10 @@ const Products = ({
                             {product.product_variations.length} variants
                           </Badge>
                         )}
-                        {product.status === "on-sale" && !isOutOfStock && (
+                        {!getProductPromotion(product) &&
+                          !hasPromotionalPricing(product) &&
+                          product.status === "on-sale" &&
+                          !isOutOfStock && (
                           <Badge variant="sale" className="text-xs">
                             On Sale
                           </Badge>
@@ -278,22 +286,10 @@ const Products = ({
                           </div>
                         )
                       ) : (
-                        <>
-                          <span className="font-bold text-lg text-primary">
-                            {formatPrice(
-                              effectivePrice,
-                              product.currency || storeCurrency
-                            )}
-                          </span>
-                          {productHasDiscount && (
-                            <span className="text-sm text-gray-500 line-through">
-                              {formatPrice(
-                                basePriceForDisplay,
-                                product.currency || storeCurrency
-                              )}
-                            </span>
-                          )}
-                        </>
+                        <PromotionalPriceRow
+                          product={product}
+                          storeCurrency={product.currency || storeCurrency}
+                        />
                       )}
                     </div>
 
@@ -357,9 +353,8 @@ const Products = ({
                 <div className="relative z-[2] pointer-events-none">
                 {/* Product Image */}
                 <div className="relative aspect-square overflow-hidden">
-                  {/* Status Badge - Moved inside the relative container */}
-                  <div className="absolute top-2 left-2 z-10 flex flex-col gap-1">
-                    {/* Variation Count Badge - Show for products with variations */}
+                  <ProductSaleFlag product={product} />
+                  <div className="absolute top-2 right-2 z-10 flex flex-col gap-1">
                     {product.product_variations && product.product_variations.length > 0 && (
                       <Badge
                         variant="outline"
@@ -368,7 +363,10 @@ const Products = ({
                         {product.product_variations.length} variants
                       </Badge>
                     )}
-                    {product.status === "on-sale" && !isOutOfStock && (
+                    {!getProductPromotion(product) &&
+                      !hasPromotionalPricing(product) &&
+                      product.status === "on-sale" &&
+                      !isOutOfStock && (
                       <Badge variant="sale" className="text-xs font-bold">
                         On Sale
                       </Badge>
@@ -466,22 +464,10 @@ const Products = ({
                         </div>
                       )
                     ) : (
-                      <>
-                        <span className="font-semibold text-primary text-lg">
-                          {formatPrice(
-                            effectivePrice,
-                            product.currency || storeCurrency
-                          )}
-                        </span>
-                        {productHasDiscount && (
-                          <span className="text-sm text-gray-500 line-through">
-                            {formatPrice(
-                              basePriceForDisplay,
-                              product.currency || storeCurrency
-                            )}
-                          </span>
-                        )}
-                      </>
+                      <PromotionalPriceRow
+                        product={product}
+                        storeCurrency={product.currency || storeCurrency}
+                      />
                     )}
                   </div>
 

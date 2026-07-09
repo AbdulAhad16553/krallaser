@@ -23,12 +23,15 @@ import { ShoppingCart, Heart, Eye, Star } from "lucide-react";
 import {
   ProductCardMarketplacePrice,
   ProductCardReviewsRow,
+  PromotionalPriceRow,
 } from "@/components/Products/ProductCardMarketplace";
 import ProductSkeleton from "@/common/Skeletons/Products";
 import MachinePageSkeleton from "@/common/Skeletons/MachinePage";
 import PartsPageSkeleton from "@/common/Skeletons/PartsPage";
 import { getProductSlug, warmProductNavigation } from "@/lib/productNavigation";
 import { useRestoreListingScroll } from "@/lib/listScrollRestoration";
+import { getProductPromotion, getPromotionLabel, hasPromotionalPricing } from "@/lib/promotionUtils";
+import { ProductSaleFlag } from "@/components/Products/PromotionBadge";
 
 interface PaginatedProductsProps {
   companyId: string;
@@ -340,6 +343,7 @@ const PaginatedProducts: React.FC<PaginatedProductsProps> = ({
           const effectivePrice = getEffectivePrice(product);
           const productHasDiscount = hasDiscount(product);
           const basePriceForDisplay = getBasePriceForDisplay(product);
+          const promotion = getProductPromotion(product);
           const priceRange = getPriceRange(product);
           const hasVariations = product.product_variations && product.product_variations.length > 0;
           const isMachineQuoteLayout = quoteFilter === "machine";
@@ -558,7 +562,8 @@ const PaginatedProducts: React.FC<PaginatedProductsProps> = ({
                 />
                 <div className="relative z-[2] flex h-full w-full flex-row pointer-events-none">
                 {/* Product Image */}
-                <div className="w-32 h-32 flex-shrink-0">
+                <div className="relative w-32 h-32 flex-shrink-0">
+                  <ProductSaleFlag product={product} />
                   <ProductImagePreview
                     itemName={product.name}
                     productName={product.name}
@@ -588,7 +593,10 @@ const PaginatedProducts: React.FC<PaginatedProductsProps> = ({
                             {product.product_variations.length} variants
                           </Badge>
                         )}
-                        {product.status === "on-sale" && !isOutOfStock && (
+                        {!getProductPromotion(product) &&
+                          !hasPromotionalPricing(product) &&
+                          product.status === "on-sale" &&
+                          !isOutOfStock && (
                           <Badge variant="sale" className="text-xs">
                             On Sale
                           </Badge>
@@ -642,22 +650,10 @@ const PaginatedProducts: React.FC<PaginatedProductsProps> = ({
                           </div>
                         )
                       ) : (
-                        <>
-                          <span className="font-bold text-lg text-primary">
-                            {formatPrice(
-                              effectivePrice,
-                              product.currency || storeCurrency
-                            )}
-                          </span>
-                          {productHasDiscount && (
-                            <span className="text-sm text-gray-500 line-through">
-                              {formatPrice(
-                                basePriceForDisplay,
-                                product.currency || storeCurrency
-                              )}
-                            </span>
-                          )}
-                        </>
+                        <PromotionalPriceRow
+                          product={product}
+                          storeCurrency={product.currency || storeCurrency}
+                        />
                       )}
                     </div>
 
@@ -721,7 +717,14 @@ const PaginatedProducts: React.FC<PaginatedProductsProps> = ({
                 <div className="relative z-[2] pointer-events-none">
                 {/* Product Image */}
                 <div className="relative aspect-square overflow-hidden">
-                  <div className="absolute top-2 right-2 z-10 flex max-w-[calc(100%-0.75rem)] flex-wrap gap-1.5 justify-end">
+                  <ProductSaleFlag product={product} />
+                  <div
+                    className={`absolute top-2 z-10 flex max-w-[calc(100%-0.75rem)] flex-wrap gap-1.5 ${
+                      quoteFilter === "parts"
+                        ? "right-2 justify-end"
+                        : "right-2 justify-end"
+                    }`}
+                  >
                     {hasVariations && (
                       <Badge
                         variant="outline"
@@ -730,7 +733,10 @@ const PaginatedProducts: React.FC<PaginatedProductsProps> = ({
                         {product.product_variations.length} variants
                       </Badge>
                     )}
-                    {product.status === "on-sale" && !isOutOfStock && (
+                    {!getProductPromotion(product) &&
+                      !hasPromotionalPricing(product) &&
+                      product.status === "on-sale" &&
+                      !isOutOfStock && (
                       <Badge
                         variant="sale"
                         className="rounded-full bg-emerald-500/95 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wide text-white shadow-sm"
@@ -778,6 +784,12 @@ const PaginatedProducts: React.FC<PaginatedProductsProps> = ({
                   <h3 className="line-clamp-2 text-sm font-normal leading-snug text-neutral-900">
                     {product.name}
                   </h3>
+                  {promotion && quoteFilter === "parts" && (
+                    <p className="text-[10px] font-bold leading-tight text-red-600">
+                      {getPromotionLabel(promotion)}
+                      {promotion.couponRequired ? " · Coupon at checkout" : ""}
+                    </p>
+                  )}
                   {Array.isArray(product.tags) && product.tags.length > 0 && (
                     <div className="flex flex-wrap gap-1">
                       {product.tags.slice(0, 3).map((tag: string) => (

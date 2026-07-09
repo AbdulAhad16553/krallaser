@@ -28,6 +28,9 @@ import MachineProductGallery from '@/components/MachineProductGallery';
 import QuotationDialog from '@/components/QuotationDialog';
 import { ProductSkeleton } from '@/components/ui/product-skeleton';
 import { getSavedProductPreview, saveProductPreview } from '@/lib/productNavigation';
+import { getProductPromotion, calculatePromotionalPrice, getDisplayPromotion } from '@/lib/promotionUtils';
+import { PromotionBanner, ProductSaleFlag } from '@/components/Products/PromotionBadge';
+import { formatPrice } from '@/lib/currencyUtils';
 
 interface Product {
   name: string;
@@ -50,12 +53,24 @@ interface Product {
     is_private: number;
   }>;
   tags?: string[];
+  promotion?: {
+    title: string;
+    discountPercentage?: number;
+    discountAmount?: number;
+    couponRequired?: boolean;
+  };
   variants?: Array<{
     name: string;
     item_name: string;
     price?: number;
     currency?: string;
     image?: string;
+    promotion?: {
+      title: string;
+      discountPercentage?: number;
+      discountAmount?: number;
+      couponRequired?: boolean;
+    };
     stock?: {
       totalStock: number;
     };
@@ -241,9 +256,10 @@ export default function ProductDetailContent({ slug, initialProduct }: ProductDe
         name: product.item_name,
         description: product.description || "",
         type: "item",
-        basePrice: product.price || 0,
-        salePrice: product.price || 0,
+        basePrice: product.base_price || product.price || 0,
+        salePrice: product.sale_price || product.price || 0,
         category: product.item_group || "product",
+        item_group: product.item_group,
         currency: product.currency || "PKR",
         bundleItems: [],
         quantity: quantity,
@@ -350,6 +366,57 @@ export default function ProductDetailContent({ slug, initialProduct }: ProductDe
     (selectedAttributes.length > 0 ||
       (product?.variants?.length === 1 && filteredVariations.length === 1));
 
+  const displayPromotion = useMemo(() => {
+    if (!product) return null;
+    const subject = activeVariation
+      ? {
+          ...product,
+          ...activeVariation,
+          promotion: activeVariation.promotion ?? product.promotion,
+        }
+      : product;
+    return getDisplayPromotion(subject);
+  }, [product, activeVariation]);
+
+  const flagProduct = useMemo(() => {
+    if (!product) return null;
+    if (!activeVariation) return product;
+    return {
+      ...product,
+      ...activeVariation,
+      promotion: activeVariation.promotion ?? product.promotion,
+    };
+  }, [product, activeVariation]);
+
+  const displayPrices = useMemo(() => {
+    if (!product) return null;
+    const cur = product.currency || "PKR";
+
+    if (activeVariation) {
+      const base = Number(
+        activeVariation.base_price ?? activeVariation.price ?? 0
+      );
+      const sale = Number(
+        activeVariation.sale_price ??
+          activeVariation.price ??
+          (displayPromotion
+            ? calculatePromotionalPrice(base, displayPromotion)
+            : base)
+      );
+      if (base > 0) return { base, sale, currency: activeVariation.currency || cur };
+    }
+
+    const base = Number(product.base_price ?? product.price ?? 0);
+    const sale = Number(
+      product.sale_price ??
+        (displayPromotion && base > 0
+          ? calculatePromotionalPrice(base, displayPromotion)
+          : product.price ?? base)
+    );
+    if (base > 0) return { base, sale, currency: cur };
+    return null;
+  }, [product, activeVariation, displayPromotion]);
+
   const handleAddToCart = () => {
     if (
       activeVariation &&
@@ -361,9 +428,10 @@ export default function ProductDetailContent({ slug, initialProduct }: ProductDe
         name: activeVariation.item_name,
         description: activeVariation.description || product?.description || "",
         type: "item",
-        basePrice: activeVariation.price || 0,
-        salePrice: activeVariation.price || 0,
+        basePrice: activeVariation.base_price || activeVariation.price || 0,
+        salePrice: activeVariation.sale_price || activeVariation.price || 0,
         category: product?.item_group || "product",
+        item_group: product?.item_group,
         currency: activeVariation.currency || "PKR",
         bundleItems: [],
         quantity: quantity,
@@ -573,6 +641,11 @@ export default function ProductDetailContent({ slug, initialProduct }: ProductDe
           {/* Main Image – only for non-quotation items */}
           {!isCustomQuotationItem && (
           <figure className="aspect-square bg-neutral-100 rounded-2xl overflow-hidden ring-1 ring-neutral-200/60 shadow-lg relative group">
+            <ProductSaleFlag
+              product={flagProduct ?? product}
+              compact={false}
+              className="!top-3 !left-3"
+            />
             {galleryImages.length > 0 && currentImage ? (
               <div className="relative w-full h-full">
                 <Image
@@ -715,13 +788,34 @@ export default function ProductDetailContent({ slug, initialProduct }: ProductDe
               )}
             </div>
 
+            {displayPromotion && (
+              <PromotionBanner
+                promotion={displayPromotion}
+                basePrice={displayPrices?.base}
+                salePrice={displayPrices?.sale}
+                currency={displayPrices?.currency}
+              />
+            )}
+
             {/* Price */}
-            {product.price != null && product.price > 0 && (
-              <div className="flex flex-wrap items-baseline gap-2">
-                <span className="text-2xl sm:text-3xl font-bold text-neutral-900 tracking-tight">
-                  {product.currency} {Number(product.price).toLocaleString()}
+            {displayPrices && displayPrices.sale > 0 && (
+              <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+                <span className="text-2xl sm:text-3xl font-bold text-red-600 tracking-tight">
+                  {formatPrice(displayPrices.sale, displayPrices.currency)}
                 </span>
-                <span className="text-neutral-500 text-sm">/ {product.stock_uom}</span>
+                {displayPrices.base > displayPrices.sale && (
+                  <span className="text-lg sm:text-xl text-neutral-400 line-through">
+                    {formatPrice(displayPrices.base, displayPrices.currency)}
+                  </span>
+                )}
+                <span className="text-neutral-500 text-sm w-full sm:w-auto">
+                  / {product.stock_uom}
+                </span>
+                {displayPromotion?.discountPercentage ? (
+                  <span className="rounded-full bg-red-50 px-2.5 py-0.5 text-sm font-semibold text-red-600">
+                    Save {displayPromotion.discountPercentage}%
+                  </span>
+                ) : null}
               </div>
             )}
 

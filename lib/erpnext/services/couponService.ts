@@ -1,9 +1,19 @@
 import { erpnextClient } from "../erpnextClient";
+import {
+  isItemCodeEligibleForRule,
+  normalizeItemCode,
+  resolveCartItemGroups,
+} from "./pricingRuleService";
+import type { ItemPromotion } from "@/lib/promotionUtils";
+
+export type { ItemPromotion };
 
 export interface CartLine {
   id?: string;
   product_id?: string;
   sku?: string;
+  category?: string;
+  item_group?: string;
   quantity?: number;
   salePrice?: number;
   price?: number;
@@ -38,8 +48,8 @@ type CouponDoc = {
 type PricingRuleDoc = {
   name: string;
   title?: string;
-  disable?: 0 | 1;
-  coupon_code_based?: 0 | 1;
+  disable?: 0 | 1 | boolean;
+  coupon_code_based?: 0 | 1 | boolean;
   apply_on?: string;
   price_or_product_discount?: string;
   rate_or_discount?: string;
@@ -52,7 +62,8 @@ type PricingRuleDoc = {
   max_amt?: number;
   valid_from?: string;
   valid_upto?: string;
-  selling?: 0 | 1;
+  selling?: 0 | 1 | boolean;
+  buying?: 0 | 1 | boolean;
   items?: Array<{ item_code?: string }>;
   item_groups?: Array<{ item_group?: string }>;
 };
@@ -73,6 +84,10 @@ function getLineTotal(item: CartLine): number {
   return getLinePrice(item) * (item.quantity ?? 1);
 }
 
+function isErpChecked(value: unknown): boolean {
+  return value === 1 || value === true || value === "1" || value === "Yes";
+}
+
 function isDateInRange(
   from: string | undefined,
   upto: string | undefined,
@@ -87,34 +102,41 @@ function isDateInRange(
   return { ok: true };
 }
 
-function getEligibleSubtotal(
+async function getEligibleSubtotal(
   rule: PricingRuleDoc,
   cartItems: CartLine[]
-): { eligibleSubtotal: number; eligibleQty: number } {
+): Promise<{ eligibleSubtotal: number; eligibleQty: number }> {
   if (rule.apply_on === "Transaction") {
     const eligibleSubtotal = cartItems.reduce((sum, item) => sum + getLineTotal(item), 0);
     const eligibleQty = cartItems.reduce((sum, item) => sum + (item.quantity ?? 1), 0);
     return { eligibleSubtotal, eligibleQty };
   }
 
-  if (rule.apply_on === "Item Code") {
-    const allowedCodes = new Set(
-      (rule.items || []).map((row) => row.item_code).filter(Boolean) as string[]
-    );
-    let eligibleSubtotal = 0;
-    let eligibleQty = 0;
-    for (const item of cartItems) {
-      const code = getItemCode(item);
-      if (allowedCodes.has(code)) {
-        eligibleSubtotal += getLineTotal(item);
-        eligibleQty += item.quantity ?? 1;
-      }
+  const itemCodes = cartItems.map(getItemCode).filter(Boolean);
+  const itemGroupMap = await resolveCartItemGroups(itemCodes);
+
+  let eligibleSubtotal = 0;
+  let eligibleQty = 0;
+
+  for (const item of cartItems) {
+    const code = getItemCode(item);
+    const itemGroup =
+      item.item_group ||
+      item.category ||
+      itemGroupMap.get(normalizeItemCode(code));
+
+    if (
+      isItemCodeEligibleForRule(rule, {
+        code,
+        itemGroup,
+      })
+    ) {
+      eligibleSubtotal += getLineTotal(item);
+      eligibleQty += item.quantity ?? 1;
     }
-    return { eligibleSubtotal, eligibleQty };
   }
 
-  // Item Group / Brand rules need extra ERP lookups — not supported in v1
-  return { eligibleSubtotal: 0, eligibleQty: 0 };
+  return { eligibleSubtotal, eligibleQty };
 }
 
 function calculateDiscount(
@@ -138,7 +160,6 @@ function calculateDiscount(
     return { amount, type: "amount" };
   }
 
-  // Fixed rate rules apply per unit in ERP; website treats as unsupported for coupons
   return { amount: 0, type: "percentage", percentage: 0 };
 }
 
@@ -204,15 +225,11 @@ export async function validateAndApplyCoupon(
     return { valid: false, message: "Linked pricing rule was not found" };
   }
 
-  if (rule.disable) {
+  if (isErpChecked(rule.disable)) {
     return { valid: false, message: "This promotion is no longer active" };
   }
 
-  if (!rule.coupon_code_based) {
-    return { valid: false, message: "This pricing rule is not coupon-based" };
-  }
-
-  if (rule.selling === 0) {
+  if (!isErpChecked(rule.selling) && isErpChecked(rule.buying)) {
     return { valid: false, message: "This coupon cannot be used for sales" };
   }
 
@@ -221,7 +238,7 @@ export async function validateAndApplyCoupon(
     return { valid: false, message: ruleDates.message || "Pricing rule is not valid" };
   }
 
-  const { eligibleSubtotal, eligibleQty } = getEligibleSubtotal(rule, cartItems);
+  const { eligibleSubtotal, eligibleQty } = await getEligibleSubtotal(rule, cartItems);
 
   if (rule.apply_on !== "Transaction" && eligibleSubtotal <= 0) {
     return {
@@ -288,3 +305,6 @@ export async function validateAndApplyCoupon(
     totalAfterDiscount,
   };
 }
+
+// Re-export for consumers that need promotion types
+export type { ItemPromotion };

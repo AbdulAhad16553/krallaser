@@ -21,6 +21,8 @@ import { subscribeHomeCatalogSearchQuery } from "@/lib/catalogSearchBridge";
 import { getProductSlug, warmProductNavigation } from "@/lib/productNavigation";
 import { useRestoreListingScroll } from "@/lib/listScrollRestoration";
 import { useRouter } from "next/navigation";
+import { getProductPromotion, hasPromotionalPricing } from "@/lib/promotionUtils";
+import { ProductSaleFlag } from "@/components/Products/PromotionBadge";
 
 function filterProductsByQuery(products: any[], q: string): any[] {
   const needle = q.trim().toLowerCase();
@@ -56,6 +58,8 @@ interface HomeProductsProps {
   catalogFetchLimit?: number;
   /** Mobile home: filter loaded catalog from `?q=` (header search); no extra in-grid search field */
   mobileCatalogSearch?: boolean;
+  /** Passed to /api/products — home mobile uses `parts` */
+  catalogMode?: "all" | "machine" | "parts";
 }
 
 const HomeProducts: React.FC<HomeProductsProps> = ({
@@ -74,6 +78,7 @@ const HomeProducts: React.FC<HomeProductsProps> = ({
   catalogTotalProducts = 0,
   catalogFetchLimit = 100,
   mobileCatalogSearch = false,
+  catalogMode = "all",
 }) => {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -152,7 +157,8 @@ const HomeProducts: React.FC<HomeProductsProps> = ({
       try {
         setLoading(true);
         setError(null);
-        const response = await fetch(`/api/products?page=1&limit=8`);
+        const modeParam = catalogMode !== "all" ? `&mode=${catalogMode}` : "";
+        const response = await fetch(`/api/products?page=1&limit=8${modeParam}`);
         const data = await response.json();
 
         if (!response.ok) throw new Error(data.error || 'Failed to fetch products');
@@ -173,7 +179,7 @@ const HomeProducts: React.FC<HomeProductsProps> = ({
 
     fetchProducts();
     return () => { isCancelled = true; };
-  }, [initialProducts, mobileInfiniteScroll, mobileBatchSize]);
+  }, [initialProducts, mobileInfiniteScroll, mobileBatchSize, catalogMode]);
 
   const filteredProducts = useMemo(
     () =>
@@ -229,8 +235,9 @@ const HomeProducts: React.FC<HomeProductsProps> = ({
     setLoadingMore(true);
     try {
       const page = nextCatalogPageRef.current;
+      const modeParam = catalogMode !== "all" ? `&mode=${catalogMode}` : "";
       const res = await fetch(
-        `/api/products?page=${page}&limit=${catalogFetchLimit}`
+        `/api/products?page=${page}&limit=${catalogFetchLimit}${modeParam}`
       );
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Failed to load more");
@@ -269,7 +276,7 @@ const HomeProducts: React.FC<HomeProductsProps> = ({
       loadingMoreRef.current = false;
       setLoadingMore(false);
     }
-  }, [mobileInfiniteScroll, mobileBatchSize, catalogFetchLimit, totalCatalog, mobileCatalogSearch]);
+  }, [mobileInfiniteScroll, mobileBatchSize, catalogFetchLimit, totalCatalog, mobileCatalogSearch, catalogMode]);
 
   loadMoreRef.current = loadMore;
 
@@ -426,6 +433,7 @@ const HomeProducts: React.FC<HomeProductsProps> = ({
           const productStock = calculateProductStock(product);
           const isOutOfStock = product.type === "variable" ? false : productStock <= 0;
           const hasVariations = product.product_variations && product.product_variations.length > 0;
+          const promotion = getProductPromotion(product);
           
           // Create unique key
           const uniqueKey = `${product.id || product.sku || product.name}-${index}-${product.type || 'simple'}`;
@@ -480,10 +488,11 @@ const HomeProducts: React.FC<HomeProductsProps> = ({
                     exploreMobile && "max-md:rounded-t-2xl"
                   )}
                 >
+                  <ProductSaleFlag product={product} />
                   <div
                     className={cn(
-                      "absolute top-2 right-2 z-10 flex max-w-[calc(100%-0.75rem)] flex-wrap gap-1.5 justify-end",
-                      exploreMobile && "max-md:top-1 max-md:right-1 max-md:scale-90 origin-top-right"
+                      "absolute top-2 z-10 flex max-w-[calc(100%-0.75rem)] flex-wrap gap-1.5 right-2 justify-end",
+                      mobileInfiniteScroll || exploreMobile ? "" : ""
                     )}
                   >
                     {hasVariations && (
@@ -494,7 +503,10 @@ const HomeProducts: React.FC<HomeProductsProps> = ({
                         {product.product_variations.length} variants
                       </Badge>
                     )}
-                    {product.status === "on-sale" && !isOutOfStock && (
+                    {!getProductPromotion(product) &&
+                      !hasPromotionalPricing(product) &&
+                      product.status === "on-sale" &&
+                      !isOutOfStock && (
                       <Badge
                         variant="sale"
                         className="rounded-full bg-emerald-500/95 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wide text-white shadow-sm"
@@ -549,7 +561,7 @@ const HomeProducts: React.FC<HomeProductsProps> = ({
                     exploreMobile && "max-md:space-y-1 max-md:p-2"
                   )}
                 >
-                  {exploreMobile && index % 3 === 0 && (
+                  {exploreMobile && index % 3 === 0 && !promotion && (
                     <p className="md:hidden rounded-md bg-pink-50 px-1.5 py-0.5 text-[9px] font-semibold leading-none text-pink-950">
                       Deals · Free shipping on orders Rs. 10,000+
                     </p>

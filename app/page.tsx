@@ -117,21 +117,24 @@ export default async function Home() {
     if (!variants || variants.length === 0) return [];
 
     return variants.map((variant: any) => {
-      const vPrice =
-        Number(variant.sale_price) ||
+      const vBase =
         Number(variant.base_price) ||
         Number(variant.price) ||
         Number(variant.standard_rate) ||
         0;
+      const apiSale = Number(variant.sale_price);
+      const vSale =
+        apiSale > 0 && apiSale < vBase ? apiSale : vBase;
       return {
         ...variant,
         id: variant.id || variant.name,
         sku: variant.sku || variant.name,
         name: variant.item_name || variant.name,
-        base_price: vPrice,
-        sale_price: vPrice,
-        price: vPrice,
-        standard_rate: vPrice,
+        base_price: vBase,
+        sale_price: vSale,
+        price: vSale,
+        standard_rate: vBase,
+        promotion: variant.promotion,
       };
     });
   };
@@ -152,6 +155,10 @@ export default async function Home() {
       Number(product?.sale_price) ||
       0;
 
+    const apiSale = Number(product?.sale_price);
+    const salePrice =
+      apiSale > 0 && apiSale < basePrice ? apiSale : basePrice;
+
     let product_images =
       normalizeImages(product?.product_images) ||
       [];
@@ -170,11 +177,13 @@ export default async function Home() {
       description: product?.description,
       slug: product?.slug || product?.item_code || product?.name,
       sku: product?.sku || product?.item_code || product?.name,
+      item_code: product?.sku || product?.item_code || product?.id,
       base_price: basePrice,
-      sale_price: basePrice,
+      sale_price: salePrice,
       currency: product?.currency || storeCurrency,
       product_variations,
       product_images,
+      promotion: product?.promotion,
       /** From /api/products — use for instant card preview (no batch-image API) */
       image_url: product?.image_url,
     };
@@ -187,7 +196,7 @@ export default async function Home() {
 
   try {
     const firstResponse = await fetch(
-      `${fullStoreUrl}/api/products?page=1&limit=${catalogLimit}`,
+      `${fullStoreUrl}/api/products?page=1&limit=${catalogLimit}&mode=parts`,
       { next: { revalidate: 60 } }
     );
 
@@ -241,10 +250,11 @@ export default async function Home() {
             initialProducts={initialHomeProducts}
             className="w-full"
             productLimit={100}
-            sectionTitle="All products"
-            sectionSubtitle="Browse our catalog"
+            sectionTitle="Parts & accessories"
+            sectionSubtitle="Browse spare parts — summer sale items marked"
             mobileInfiniteScroll
             mobileBatchSize={12}
+            catalogMode="parts"
             catalogTotalProducts={homeCatalogTotalProducts}
             catalogFetchLimit={catalogLimit}
             mobileCatalogSearch

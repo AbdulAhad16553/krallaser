@@ -2,7 +2,8 @@
 
 import { Star } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { formatPrice, getEffectivePrice, getPriceRange } from "@/lib/currencyUtils";
+import { formatPrice, getPriceRange } from "@/lib/currencyUtils";
+import { getProductPricePair } from "@/lib/promotionUtils";
 
 /** Stable per-SKU display for stars + counts (placeholder, not live reviews). */
 export function getCardReviewDisplayMeta(sku: string) {
@@ -71,6 +72,47 @@ export function ProductCardReviewsRow({
   );
 }
 
+/** Sale + original price on one row */
+export function PromotionalPriceRow({
+  product,
+  storeCurrency,
+  compact,
+  className,
+}: {
+  product: any;
+  storeCurrency: string;
+  compact?: boolean;
+  className?: string;
+}) {
+  const cur = product.currency || storeCurrency;
+  const { base, sale, hasDiscount } = getProductPricePair(product);
+
+  const saleClass = compact
+    ? "text-sm font-extrabold leading-tight text-red-600"
+    : "text-base font-extrabold leading-tight text-red-600 sm:text-lg";
+  const baseClass = compact
+    ? "text-[11px] leading-tight text-neutral-400 line-through"
+    : "text-sm text-neutral-400 line-through";
+  const singleClass = compact
+    ? "text-sm font-extrabold leading-tight text-neutral-900"
+    : "text-base font-extrabold leading-tight text-neutral-900 sm:text-lg";
+
+  if (!hasDiscount) {
+    return (
+      <span className={cn(singleClass, className)}>
+        {formatPrice(sale || base, cur)}
+      </span>
+    );
+  }
+
+  return (
+    <div className={cn("flex flex-wrap items-baseline gap-1.5", className)}>
+      <span className={saleClass}>{formatPrice(sale, cur)}</span>
+      <span className={baseClass}>{formatPrice(base, cur)}</span>
+    </div>
+  );
+}
+
 export function ProductCardMarketplacePrice({
   product,
   storeCurrency,
@@ -90,12 +132,28 @@ export function ProductCardMarketplacePrice({
   const secondaryClass = compact ? "text-[11px] leading-tight" : "text-sm";
 
   if (hasVariations && priceRange) {
+    const { hasDiscount } = getProductPricePair(product);
+    const saleMax = priceRange.max;
+
     return (
       <div className="flex flex-col gap-0.5">
-        <span className={priceClass}>
-          From {formatPrice(priceRange.min, cur)}
-        </span>
-        {priceRange.min !== priceRange.max && (
+        {hasDiscount ? (
+          <PromotionalPriceRow
+            product={product}
+            storeCurrency={storeCurrency}
+            compact={compact}
+          />
+        ) : (
+          <span className={priceClass}>
+            From {formatPrice(priceRange.min, cur)}
+          </span>
+        )}
+        {hasDiscount && priceRange.min !== priceRange.max && (
+          <span className={cn(secondaryClass, "text-neutral-500")}>
+            Up to {formatPrice(saleMax, cur)}
+          </span>
+        )}
+        {!hasDiscount && priceRange.min !== priceRange.max && (
           <span className={cn(secondaryClass, "text-neutral-500")}>
             Up to {formatPrice(priceRange.max, cur)}
           </span>
@@ -104,6 +162,11 @@ export function ProductCardMarketplacePrice({
     );
   }
 
-  const sale = getEffectivePrice(product);
-  return <span className={priceClass}>{formatPrice(sale, cur)}</span>;
+  return (
+    <PromotionalPriceRow
+      product={product}
+      storeCurrency={storeCurrency}
+      compact={compact}
+    />
+  );
 }

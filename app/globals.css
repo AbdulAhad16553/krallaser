@@ -1190,4 +1190,103 @@ body {
       opacity: 0.4;
     }
   }
+
+  /* Sale flag badge — waving flag on product cards */
+  .promotion-flag {
+    position: relative;
+    display: inline-flex;
+    align-items: flex-start;
+    z-index: 20;
+    filter: drop-shadow(0 3px 6px rgba(0, 0, 0, 0.28));
+  }
+
+  .promotion-flag--corner {
+    position: absolute;
+    top: 0.35rem;
+    left: 0.35rem;
+  }
+
+  .promotion-flag-pole {
+    width: 4px;
+    height: 100%;
+    min-height: 2.1rem;
+    background: linear-gradient(180deg, #4b5563 0%, #111827 100%);
+    border-radius: 2px 0 0 2px;
+    flex-shrink: 0;
+    box-shadow: inset -1px 0 0 rgba(255, 255, 255, 0.15);
+  }
+
+  .promotion-flag--compact .promotion-flag-pole {
+    width: 3px;
+    min-height: 1.65rem;
+  }
+
+  .promotion-flag-cloth {
+    position: relative;
+    display: flex;
+    align-items: center;
+    padding: 0.3rem 0.55rem 0.3rem 0.4rem;
+    background: linear-gradient(135deg, #f87171 0%, #ef4444 35%, #dc2626 70%, #b91c1c 100%);
+    border-radius: 0 5px 5px 0;
+    transform-origin: left center;
+    animation: promotionFlagWave 1.8s ease-in-out infinite;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-left: none;
+  }
+
+  .promotion-flag--compact .promotion-flag-cloth {
+    padding: 0.22rem 0.45rem 0.22rem 0.32rem;
+    border-radius: 0 4px 4px 0;
+  }
+
+  .promotion-flag-text {
+    font-size: 0.6875rem;
+    font-weight: 800;
+    line-height: 1.1;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: #fff;
+    white-space: nowrap;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.35);
+  }
+
+  .promotion-flag--compact .promotion-flag-text {
+    font-size: 0.5625rem;
+    letter-spacing: 0.04em;
+  }
+
+  .promotion-flag-notch {
+    position: absolute;
+    left: 0;
+    bottom: -5px;
+    width: 0;
+    height: 0;
+    border-left: 6px solid #7f1d1d;
+    border-bottom: 5px solid transparent;
+  }
+
+  .promotion-flag--compact .promotion-flag-notch {
+    border-left-width: 5px;
+    border-bottom-width: 4px;
+    bottom: -4px;
+  }
+
+  @keyframes promotionFlagWave {
+    0%,
+    100% {
+      transform: perspective(120px) rotateY(0deg) rotateZ(0deg) skewY(0deg);
+    }
+    20% {
+      transform: perspective(120px) rotateY(-16deg) rotateZ(-1deg) skewY(4deg);
+    }
+    45% {
+      transform: perspective(120px) rotateY(8deg) rotateZ(1deg) skewY(-3deg);
+    }
+    70% {
+      transform: perspective(120px) rotateY(-12deg) rotateZ(-0.5deg) skewY(3deg);
+    }
+    85% {
+      transform: perspective(120px) rotateY(5deg) rotateZ(0.5deg) skewY(-1deg);
+    }
+  }
 }

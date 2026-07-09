@@ -35,6 +35,7 @@ interface UsePaginatedProductsOptions {
   /**
    * When true (default), loads every page from `/api/products` once so the UI can filter/search on the client.
    */
+  loadFullCatalog?: boolean;
   /**
    * When true, skips per-item price/stock ERP calls for faster catalog listing.
    */

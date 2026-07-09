@@ -44,6 +44,7 @@ export const AddToCart = (product: any, quantity: number = 1) => {
                 variation: product.variation,
                 currency: product.currency,
                 category: product.category,
+                item_group: product.item_group || product.category,
                 type: product.type || "item",
                 product_id: product.id
             };

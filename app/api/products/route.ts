@@ -5,6 +5,10 @@ import { productCache, stockCache, priceCache } from '@/lib/cache';
 import { trackPaginationPerformance, trackPaginationCacheHit, trackPaginationCacheMiss } from '@/lib/paginationPerformance';
 import { getErpnextImageUrl, getCatalogThumbnailSrc } from '@/lib/erpnextImageUtils';
 import { parseErpTags } from '@/lib/erpnext/tags';
+import {
+  attachPromotionsToProducts,
+  getActivePromotionsByItemCode,
+} from '@/lib/erpnext/services/pricingRuleService';
 
 export async function GET(request: NextRequest) {
   try {
@@ -105,7 +109,10 @@ export async function GET(request: NextRequest) {
     }
 
     // Transform ERPNext products to match frontend interface
-    const transformedProducts = products.map((product, index) => {
+    const promotions = await getActivePromotionsByItemCode();
+
+    const transformedProducts = attachPromotionsToProducts(
+      products.map((product, index) => {
       // Use ERPNext custom field "custom_quotation_item" as the source
       const rawEnableQuote =
         (product as any).custom_quotation_item ??
@@ -213,7 +220,9 @@ export async function GET(request: NextRequest) {
         tags,
         ...(priceRange && { price_range: priceRange })
       };
-    });
+    }),
+      promotions
+    );
 
     const totalCountCacheKey = `products-total-count-${mode}`;
     let totalProducts = productCache.get(totalCountCacheKey) as any[] | undefined;
