@@ -57,7 +57,9 @@ export async function POST(request: Request) {
   }
 
   const body = await request.json().catch(() => null);
-  const { customer, items, shipping, companyId, coupon } = body || {};
+  const { customer, items, shipping, companyId, coupon, currency } = body || {};
+  const invoiceCurrency =
+    typeof currency === "string" && currency.trim() ? currency.trim() : "PKR";
 
   if (!customer) {
     return NextResponse.json(
@@ -82,6 +84,10 @@ export async function POST(request: Request) {
     due_date: today,
     customer,
     company: companyId,
+    currency: invoiceCurrency,
+    conversion_rate: 1,
+    plc_conversion_rate: 1,
+    price_list_currency: invoiceCurrency,
     items: invoiceItems,
     contact_email: shipping?.email,
     contact_mobile: shipping?.phone,

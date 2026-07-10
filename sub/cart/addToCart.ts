@@ -52,7 +52,7 @@ export const AddToCart = (product: any, quantity: number = 1) => {
                 selectedAttributes: product.selectedAttributes,
                 isVariation: product.isVariation,
                 variation: product.variation,
-                currency: product.currency,
+                currency: product.currency || "PKR",
                 category: product.category,
                 item_group: product.item_group || product.category,
                 type: product.type || "item",

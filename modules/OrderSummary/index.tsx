@@ -244,6 +244,7 @@ const OrderSummary = ({ storeCurrency, necessary }: OrderSummaryProps) => {
         body: JSON.stringify({
           customer: customerData?.data?.name || customerForm.name,
           items: cartItems,
+          currency: storeCurrency || "PKR",
           shipping: { ...customerForm },
           companyId: necessary?.companyId,
           storeId: necessary?.storeId,
