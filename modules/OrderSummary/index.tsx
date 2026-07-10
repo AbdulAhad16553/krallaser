@@ -19,6 +19,11 @@ import { Textarea } from '@/components/ui/textarea';
 import { toast } from 'sonner';
 import { Lock, ShoppingBag, Tag, X } from 'lucide-react';
 import Link from 'next/link';
+import {
+  currencyCode,
+  trackInitiateCheckout,
+  trackPurchase,
+} from '@/lib/metaPixel';
 
 const APPLIED_COUPON_KEY = 'appliedCoupon';
 
@@ -159,6 +164,28 @@ const OrderSummary = ({ storeCurrency, necessary }: OrderSummaryProps) => {
       toast.error('Your cart is empty');
       return;
     }
+
+    const contentIds = cartItems
+      .map((item) => String(item.sku || item.variationId || item.id || ''))
+      .filter(Boolean);
+    const contents = cartItems.map((item) => ({
+      id: String(item.sku || item.variationId || item.id || ''),
+      quantity: Number(item.quantity) || 1,
+      item_price: Number(item.salePrice ?? item.price ?? 0) || 0,
+    }));
+    const numItems = cartItems.reduce(
+      (sum, item) => sum + (Number(item.quantity) || 1),
+      0
+    );
+
+    trackInitiateCheckout({
+      content_ids: contentIds,
+      contents,
+      currency: currencyCode(storeCurrency),
+      value: total,
+      num_items: numItems,
+    });
+
     setDialogOpen(true);
   };
 
@@ -241,6 +268,25 @@ const OrderSummary = ({ storeCurrency, necessary }: OrderSummaryProps) => {
         description: invoiceData?.data?.name
           ? `Invoice #${invoiceData.data.name}`
           : 'Sales invoice created',
+      });
+
+      const contentIds = cartItems
+        .map((item) => String(item.sku || item.variationId || item.id || ''))
+        .filter(Boolean);
+      const contents = cartItems.map((item) => ({
+        id: String(item.sku || item.variationId || item.id || ''),
+        quantity: Number(item.quantity) || 1,
+        item_price: Number(item.salePrice ?? item.price ?? 0) || 0,
+      }));
+
+      trackPurchase({
+        content_ids: contentIds,
+        contents,
+        currency: currencyCode(storeCurrency),
+        value: total,
+        content_name: invoiceData?.data?.name
+          ? `Invoice ${invoiceData.data.name}`
+          : 'Order',
       });
 
       sessionStorage.removeItem('cart');

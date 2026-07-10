@@ -1,3 +1,5 @@
+import { trackAddToCart, currencyCode } from "@/lib/metaPixel";
+
 // Simplified cart functionality for ERPNext integration
 // In a real implementation, you would integrate with ERPNext's cart/order system
 
@@ -56,6 +58,22 @@ export const AddToCart = (product: any, quantity: number = 1) => {
         
         // Dispatch custom event to notify components
         window.dispatchEvent(new CustomEvent("cartUpdated"));
+
+        const unitPrice =
+          Number(product.salePrice ?? product.basePrice ?? product.price ?? 0) || 0;
+        const contentId = String(
+          product.sku || product.variationId || product.id || uniqueId || ""
+        );
+        trackAddToCart({
+          content_name: product.name || contentId,
+          content_ids: contentId ? [contentId] : undefined,
+          content_category: product.item_group || product.category,
+          currency: currencyCode(product.currency),
+          value: unitPrice * quantity,
+          contents: contentId
+            ? [{ id: contentId, quantity, item_price: unitPrice }]
+            : undefined,
+        });
         
         return { success: true, message: "Product added to cart" };
     } catch (error) {

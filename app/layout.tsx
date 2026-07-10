@@ -3,6 +3,7 @@ import { Plus_Jakarta_Sans } from "next/font/google";
 import "./globals.css";
 import CacheInitializer from "@/components/CacheInitializer";
 import ChunkErrorRecovery from "@/components/ChunkErrorRecovery";
+import MetaPixelProvider from "@/components/MetaPixelProvider";
 import {
   DEFAULT_DESCRIPTION,
   DEFAULT_KEYWORDS,
@@ -108,6 +109,7 @@ export default async function RootLayout({
         <body className={`${plusJakarta.variable} ${plusJakarta.className}`} cz-shortcut-listen="true">
           <CacheInitializer />
           <ChunkErrorRecovery />
+          <MetaPixelProvider />
           {/* <PWARegister /> */}
           {children}
           {/* <ChatBox /> */}
@@ -139,6 +141,7 @@ export default async function RootLayout({
       </head>
         <body className={`${plusJakarta.variable} ${plusJakarta.className}`} cz-shortcut-listen="true">
           <CacheInitializer />
+          <MetaPixelProvider />
           {/* <PWARegister /> */}
           {children}
           {/* <ChatBox /> */}

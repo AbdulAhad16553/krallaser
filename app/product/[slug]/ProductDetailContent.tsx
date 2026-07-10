@@ -31,6 +31,7 @@ import { getSavedProductPreview, saveProductPreview } from '@/lib/productNavigat
 import { getProductPromotion, calculatePromotionalPrice, getDisplayPromotion } from '@/lib/promotionUtils';
 import { PromotionBanner, ProductSaleFlag } from '@/components/Products/PromotionBadge';
 import { formatPrice } from '@/lib/currencyUtils';
+import { currencyCode, trackViewContent } from '@/lib/metaPixel';
 
 interface Product {
   name: string;
@@ -130,6 +131,19 @@ export default function ProductDetailContent({ slug, initialProduct }: ProductDe
   const isCustomQuotationItem =
     (product as any)?.custom_quotation_item === 1 ||
     (product as any)?.custom_custom_quotation_item === 1;
+
+  // Meta Pixel — ViewContent when product detail is shown
+  useEffect(() => {
+    if (!product?.name) return;
+    const value = Number(product.sale_price ?? product.price ?? product.base_price ?? 0);
+    trackViewContent({
+      content_name: product.item_name || product.name,
+      content_ids: [product.name],
+      content_category: product.item_group,
+      currency: currencyCode(product.currency),
+      value: value > 0 ? value : undefined,
+    });
+  }, [product?.name]);
 
   // Initialize gallery images from product data
   useEffect(() => {

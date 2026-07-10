@@ -1,21 +1,29 @@
-// Simplified event tracking for ERPNext integration
-// In a real implementation, you would integrate with your analytics system
+import { trackMetaEvent, currencyCode } from "@/lib/metaPixel";
 
+/**
+ * Bridge for existing Meta event payloads — also fires the browser Pixel
+ * so Events Manager receives AddToCart / custom events from the site.
+ */
 export const createMetaEvent = (eventData: any) => {
-    try {
-        // In a real implementation, you would send events to your analytics system
-        // For now, just log the event
-        console.log("Meta event created:", eventData);
-        
-        // You could integrate with:
-        // - Google Analytics
-        // - Facebook Pixel
-        // - ERPNext's built-in analytics
-        // - Custom analytics solution
-        
-        return { success: true, message: "Event tracked successfully" };
-    } catch (error) {
-        console.error("Error creating meta event:", error);
-        return { success: false, message: "Failed to track event" };
+  try {
+    const eventName = eventData?.event_name || "CustomEvent";
+    const custom = eventData?.custom_data || {};
+
+    trackMetaEvent(eventName, {
+      content_name: custom.content_name,
+      content_category: custom.content_category,
+      currency: currencyCode(custom.currency),
+      value: Number(custom.value) || 0,
+      content_type: "product",
+    });
+
+    if (process.env.NODE_ENV === "development") {
+      console.log("Meta event created:", eventData);
     }
+
+    return { success: true, message: "Event tracked successfully" };
+  } catch (error) {
+    console.error("Error creating meta event:", error);
+    return { success: false, message: "Failed to track event" };
+  }
 };
