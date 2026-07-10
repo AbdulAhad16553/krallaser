@@ -31,7 +31,7 @@ import PartsPageSkeleton from "@/common/Skeletons/PartsPage";
 import { getProductSlug, warmProductNavigation } from "@/lib/productNavigation";
 import { useRestoreListingScroll } from "@/lib/listScrollRestoration";
 import { getProductPromotion, getPromotionLabel, hasPromotionalPricing, isOnSaleProduct, sortSaleItemsFirst } from "@/lib/promotionUtils";
-import { ProductSaleFlag } from "@/components/Products/PromotionBadge";
+import { ProductSaleFlag, SaleListingBanner } from "@/components/Products/PromotionBadge";
 
 interface PaginatedProductsProps {
   companyId: string;
@@ -325,16 +325,7 @@ const PaginatedProducts: React.FC<PaginatedProductsProps> = ({
         </div>
       </div>
 
-      {saleItemsCount > 0 && (
-        <div className="mb-4 flex items-center gap-2 rounded-xl border border-red-200 bg-gradient-to-r from-red-50 to-orange-50 px-3 py-2.5 text-sm text-red-800 sm:px-4">
-          <span className="inline-flex h-6 items-center rounded bg-red-600 px-2 text-[11px] font-extrabold uppercase tracking-wide text-white">
-            On Sale
-          </span>
-          <p className="font-medium">
-            {saleItemsCount} item{saleItemsCount === 1 ? "" : "s"} on sale — shown first
-          </p>
-        </div>
-      )}
+      <SaleListingBanner count={saleItemsCount} />
 
       {/* Products Grid */}
       <div

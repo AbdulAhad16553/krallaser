@@ -28,7 +28,7 @@ import MachineProductGallery from '@/components/MachineProductGallery';
 import QuotationDialog from '@/components/QuotationDialog';
 import { ProductSkeleton } from '@/components/ui/product-skeleton';
 import { getSavedProductPreview, saveProductPreview } from '@/lib/productNavigation';
-import { getProductPromotion, calculatePromotionalPrice, getDisplayPromotion } from '@/lib/promotionUtils';
+import { getDisplayPromotion, getProductPricePair } from '@/lib/promotionUtils';
 import { PromotionBanner, ProductSaleFlag } from '@/components/Products/PromotionBadge';
 import { formatPrice } from '@/lib/currencyUtils';
 import { currencyCode, trackViewContent } from '@/lib/metaPixel';
@@ -411,29 +411,25 @@ export default function ProductDetailContent({ slug, initialProduct }: ProductDe
     const cur = product.currency || "PKR";
 
     if (activeVariation) {
-      const base = Number(
-        activeVariation.base_price ?? activeVariation.price ?? 0
-      );
-      const sale = Number(
-        activeVariation.sale_price ??
-          activeVariation.price ??
-          (displayPromotion
-            ? calculatePromotionalPrice(base, displayPromotion)
-            : base)
-      );
-      if (base > 0) return { base, sale, currency: activeVariation.currency || cur };
+      const pair = getProductPricePair({
+        ...activeVariation,
+        promotion: activeVariation.promotion ?? product.promotion,
+      });
+      if (pair.base > 0 || pair.sale > 0) {
+        return {
+          base: pair.base,
+          sale: pair.sale,
+          currency: activeVariation.currency || cur,
+        };
+      }
     }
 
-    const base = Number(product.base_price ?? product.price ?? 0);
-    const sale = Number(
-      product.sale_price ??
-        (displayPromotion && base > 0
-          ? calculatePromotionalPrice(base, displayPromotion)
-          : product.price ?? base)
-    );
-    if (base > 0) return { base, sale, currency: cur };
+    const pair = getProductPricePair(product);
+    if (pair.base > 0 || pair.sale > 0) {
+      return { base: pair.base, sale: pair.sale, currency: cur };
+    }
     return null;
-  }, [product, activeVariation, displayPromotion]);
+  }, [product, activeVariation]);
 
   const handleAddToCart = () => {
     if (

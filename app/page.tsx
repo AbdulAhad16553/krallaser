@@ -23,6 +23,7 @@ import {
   SITE_URL,
   buildWebPageSchema,
 } from "@/lib/seo";
+import { calculatePromotionalPrice } from "@/lib/promotionUtils";
 
 export async function generateMetadata() {
   const Headers = await headers();
@@ -117,12 +118,16 @@ export default async function Home() {
     if (!variants || variants.length === 0) return [];
 
     return variants.map((variant: any) => {
+      const apiSale = Number(variant.sale_price) || 0;
       const vBase =
-        Number(variant.base_price) ||
-        Number(variant.price) ||
-        Number(variant.standard_rate) ||
-        0;
-      const apiSale = Number(variant.sale_price);
+        Number(variant.base_price) > 0 &&
+        (apiSale <= 0 || Number(variant.base_price) >= apiSale)
+          ? Number(variant.base_price)
+          : Number(variant.standard_rate) ||
+            (Number(variant.price) > apiSale ? Number(variant.price) : 0) ||
+            Number(variant.base_price) ||
+            apiSale ||
+            0;
       const vSale =
         apiSale > 0 && apiSale < vBase ? apiSale : vBase;
       return {
@@ -132,8 +137,8 @@ export default async function Home() {
         name: variant.item_name || variant.name,
         base_price: vBase,
         sale_price: vSale,
-        price: vSale,
         standard_rate: vBase,
+        price: vSale,
         promotion: variant.promotion,
       };
     });
@@ -141,23 +146,36 @@ export default async function Home() {
 
   const buildFeaturedProductPayload = (product: any) => {
     const product_variations = buildVariations(product);
-    const variationPrices = product_variations
+    const variationListPrices = product_variations
       .map((v: any) => Number(v.base_price) || 0)
       .filter((p: number) => p > 0);
     const maxVariationPrice =
-      variationPrices.length > 0 ? Math.max(...variationPrices) : 0;
+      variationListPrices.length > 0 ? Math.max(...variationListPrices) : 0;
 
+    const apiBase = Number(product?.base_price) || 0;
+    const apiSale = Number(product?.sale_price) || 0;
+    const apiPrice = Number(product?.price) || 0;
+    const standard = Number(product?.standard_rate) || 0;
+
+    // Never prefer discounted `price` over `base_price` (price is set to sale after promo)
     const basePrice =
       maxVariationPrice ||
-      Number(product?.price) ||
-      Number(product?.standard_rate) ||
-      Number(product?.base_price) ||
-      Number(product?.sale_price) ||
+      (apiBase > 0 && (apiSale <= 0 || apiBase >= apiSale) ? apiBase : 0) ||
+      standard ||
+      (apiPrice > apiSale ? apiPrice : 0) ||
+      apiBase ||
+      apiSale ||
       0;
 
-    const apiSale = Number(product?.sale_price);
-    const salePrice =
+    let salePrice =
       apiSale > 0 && apiSale < basePrice ? apiSale : basePrice;
+
+    if (product?.promotion && basePrice > 0) {
+      const expected = calculatePromotionalPrice(basePrice, product.promotion);
+      if (!(apiSale > 0 && apiSale < basePrice) || apiSale < expected - 0.02) {
+        salePrice = expected;
+      }
+    }
 
     let product_images =
       normalizeImages(product?.product_images) ||
@@ -180,6 +198,8 @@ export default async function Home() {
       item_code: product?.sku || product?.item_code || product?.id,
       base_price: basePrice,
       sale_price: salePrice,
+      standard_rate: basePrice,
+      price: salePrice,
       currency: product?.currency || storeCurrency,
       product_variations,
       product_images,

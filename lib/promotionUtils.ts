@@ -65,35 +65,80 @@ export function calculatePromotionalPrice(
   return base;
 }
 
+/**
+ * Original list price before promo.
+ * After applyPromotionPricing, `price` is set to the sale amount — never treat that as list.
+ */
+export function resolveListPrice(item: any): number {
+  const base = Number(item?.base_price ?? 0);
+  const sale = Number(item?.sale_price ?? 0);
+  const price = Number(item?.price ?? 0);
+  const standard = Number(item?.standard_rate ?? 0);
+  const promotion = item?.promotion as ItemPromotion | undefined;
+
+  // Recover when base was wrongly set to the once-discounted amount
+  if (promotion && standard > base && base > 0) {
+    const fromStandard = calculatePromotionalPrice(standard, promotion);
+    if (Math.abs(base - fromStandard) <= 0.02) return standard;
+    if (
+      sale > 0 &&
+      Math.abs(sale - calculatePromotionalPrice(fromStandard, promotion)) <= 0.02
+    ) {
+      return standard;
+    }
+  }
+
+  // Explicit base above sale (or equal before discount is applied)
+  if (base > 0 && (sale <= 0 || base > sale)) return base;
+
+  // `price` only if it is clearly the list (higher than sale)
+  if (price > 0 && (sale <= 0 || price > sale)) return price;
+
+  if (standard > 0 && (sale <= 0 || standard > sale)) return standard;
+
+  // Pre-promo: base_price === sale_price === list
+  if (base > 0) return base;
+  if (standard > 0) return standard;
+  if (price > 0) return price;
+  return sale > 0 ? sale : 0;
+}
+
 export function applyPromotionPricing<T extends Record<string, unknown>>(
   item: T,
   promotion: ItemPromotion
 ): T {
-  const base = Number(
-    item.base_price ?? item.price ?? item.sale_price ?? 0
-  );
+  const base = resolveListPrice(item);
   if (base <= 0) {
     return { ...item, promotion };
   }
 
-  const sale = calculatePromotionalPrice(base, promotion);
-  if (sale >= base) {
+  const expectedSale = calculatePromotionalPrice(base, promotion);
+  if (expectedSale >= base) {
     return { ...item, promotion };
   }
+
+  const existingSale = Number(item.sale_price ?? 0);
+  // Prefer expected; if existing already matches, keep it; if existing is lower (double-discount), restore expected
+  const finalSale =
+    existingSale > 0 && Math.abs(existingSale - expectedSale) <= 0.02
+      ? existingSale
+      : expectedSale;
+
+  const standard = Number(item.standard_rate ?? 0);
 
   return {
     ...item,
     promotion,
     base_price: base,
-    sale_price: sale,
-    price: sale,
+    sale_price: finalSale,
+    standard_rate: standard > base ? standard : base,
+    price: finalSale,
   };
 }
 
 export function hasPromotionalPricing(product: any): boolean {
-  const base = Number(product?.base_price ?? 0);
-  const sale = Number(product?.sale_price ?? product?.price ?? 0);
-  return base > 0 && sale > 0 && sale < base;
+  const { hasDiscount } = getProductPricePair(product);
+  return hasDiscount;
 }
 
 /** True when product (or a variation) is on a pricing-rule / sale discount */
@@ -156,18 +201,30 @@ export function getDisplayPromotion(product: any): ItemPromotion | null {
   return null;
 }
 
-/** Resolved base + sale for display (recalculates from promotion if needed). */
+/** Resolved base + sale for display (applies pricing rule at most once). */
 export function getProductPricePair(product: any): {
   base: number;
   sale: number;
   hasDiscount: boolean;
 } {
   const promotion = getProductPromotion(product);
-  let base = Number(product?.base_price ?? product?.price ?? 0);
-  let sale = Number(product?.sale_price ?? product?.price ?? base);
+  let base = resolveListPrice(product);
+  let sale = Number(product?.sale_price ?? 0);
 
-  if (promotion && base > 0 && (sale >= base || sale <= 0)) {
-    sale = calculatePromotionalPrice(base, promotion);
+  if (promotion && base > 0) {
+    const expected = calculatePromotionalPrice(base, promotion);
+    if (sale <= 0 || sale >= base) {
+      // Discount not applied yet (or collapsed) — apply once
+      sale = expected;
+    } else if (sale < expected - 0.02) {
+      // Sale lower than rule allows → was double-discounted; restore
+      sale = expected;
+    }
+    // else: sale already matches a valid once-discounted price
+  } else if (sale <= 0) {
+    const price = Number(product?.price ?? 0);
+    // Prefer price only when it is not clearly a sale-only field
+    sale = price > 0 && (base <= 0 || price >= base) ? price : base;
   }
 
   if (base <= 0 && sale > 0) base = sale;
