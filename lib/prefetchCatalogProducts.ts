@@ -9,10 +9,12 @@ export async function prefetchCatalogProducts(
   const { mode = "all", limit = 48 } = options;
   const fullStoreUrl = getUrlWithScheme(host);
   const modeParam = mode !== "all" ? `&mode=${mode}` : "";
+  // Machines are quote-led; parts/shop need full Item Price for sale pricing
+  const lightParam = mode === "machine" ? "&light=1" : "";
 
   try {
     const response = await fetch(
-      `${fullStoreUrl}/api/products?page=1&limit=${limit}${modeParam}&light=1`,
+      `${fullStoreUrl}/api/products?page=1&limit=${limit}${modeParam}${lightParam}`,
       { next: { revalidate: 60 } }
     );
     if (!response.ok) return [];

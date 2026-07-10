@@ -236,6 +236,45 @@ export function getProductPricePair(product: any): {
   };
 }
 
+/** Write resolved list + sale prices back onto a product (and variations). */
+export function normalizeProductPricing<T extends Record<string, any>>(product: T): T {
+  const normalizeOne = (item: any) => {
+    if (!item) return item;
+    const { base, sale } = getProductPricePair(item);
+    if (base <= 0 && sale <= 0) return item;
+    return {
+      ...item,
+      base_price: base,
+      sale_price: sale > 0 ? sale : base,
+      standard_rate: Math.max(Number(item.standard_rate ?? 0), base),
+      price: sale > 0 ? sale : base,
+    };
+  };
+
+  let next = normalizeOne({ ...product });
+
+  if (Array.isArray(next.product_variations)) {
+    next = {
+      ...next,
+      product_variations: next.product_variations.map(normalizeOne),
+    };
+  }
+  if (Array.isArray(next.variants)) {
+    next = {
+      ...next,
+      variants: next.variants.map(normalizeOne),
+    };
+  }
+
+  return next;
+}
+
+export function normalizeProductsPricing<T extends Record<string, any>>(
+  products: T[]
+): T[] {
+  return products.map((p) => normalizeProductPricing(p));
+}
+
 export function recalculateVariableProductPrices(product: any): any {
   const variations = product?.product_variations || product?.variants;
   if (!variations?.length) return product;

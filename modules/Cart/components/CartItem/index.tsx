@@ -17,8 +17,9 @@ interface CartItemProps {
 
 const CartItem = ({ item, showBundleInfo, storeCurrency }: CartItemProps) => {
   const name = item?.name ?? 'Unknown Product';
-  const basePrice = item?.basePrice ?? 0;
-  const salePrice = item?.salePrice ?? item?.price ?? basePrice;
+  const basePrice = Number(item?.basePrice ?? 0);
+  const salePrice = Number(item?.salePrice ?? item?.price ?? basePrice) || 0;
+  const hasSale = basePrice > 0 && salePrice > 0 && salePrice < basePrice;
   const sku = item?.sku ?? item?.id ?? 'N/A';
   const currency = item?.currency ?? storeCurrency;
   const quantity = item?.quantity ?? 1;
@@ -56,9 +57,14 @@ const CartItem = ({ item, showBundleInfo, storeCurrency }: CartItemProps) => {
             </div>
           )}
           <div className="mt-2 sm:hidden">
-            <span className="font-semibold text-slate-900">
+            <span className={`font-semibold ${hasSale ? 'text-red-600' : 'text-slate-900'}`}>
               {formatPrice(lineTotal, currency)}
             </span>
+            {hasSale && (
+              <span className="ml-2 text-sm text-slate-400 line-through">
+                {formatPrice(basePrice * quantity, currency)}
+              </span>
+            )}
             {quantity > 1 && (
               <span className="text-slate-500 text-sm ml-1">
                 ({formatPrice(salePrice, currency)} each)
@@ -92,9 +98,16 @@ const CartItem = ({ item, showBundleInfo, storeCurrency }: CartItemProps) => {
 
           {/* Desktop: unit price + line total */}
           <div className="hidden sm:flex flex-col items-end min-w-[100px]">
-            <span className="text-sm text-slate-500">
-              {formatPrice(salePrice, currency)} each
-            </span>
+            <div className="flex flex-wrap items-baseline justify-end gap-1.5">
+              <span className={`text-sm font-semibold ${hasSale ? 'text-red-600' : 'text-slate-700'}`}>
+                {formatPrice(salePrice, currency)} each
+              </span>
+              {hasSale && (
+                <span className="text-xs text-slate-400 line-through">
+                  {formatPrice(basePrice, currency)}
+                </span>
+              )}
+            </div>
             <span className="font-semibold text-slate-900 mt-0.5">
               {formatPrice(lineTotal, currency)}
             </span>

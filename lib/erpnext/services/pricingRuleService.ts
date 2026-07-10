@@ -1,5 +1,6 @@
 import {
   applyPromotionPricing,
+  normalizeProductPricing,
   recalculateVariableProductPrices,
   type ItemPromotion,
 } from "@/lib/promotionUtils";
@@ -256,7 +257,7 @@ export function attachPromotionToProduct(
   }
 
   const selfPromo = resolve(
-    next.id || next.sku || next.item_code,
+    next.id || next.sku || next.item_code || next.name,
     next.item_group
   );
 
@@ -274,7 +275,9 @@ export function attachPromotionsToProducts(
   products: any[],
   promotions: Map<string, ItemPromotion>
 ): any[] {
-  return products.map((p) => attachPromotionToProduct(p, promotions));
+  return products.map((p) =>
+    normalizeProductPricing(attachPromotionToProduct(p, promotions))
+  );
 }
 
 export async function resolveCartItemGroups(

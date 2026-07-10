@@ -28,7 +28,7 @@ import MachineProductGallery from '@/components/MachineProductGallery';
 import QuotationDialog from '@/components/QuotationDialog';
 import { ProductSkeleton } from '@/components/ui/product-skeleton';
 import { getSavedProductPreview, saveProductPreview } from '@/lib/productNavigation';
-import { getDisplayPromotion, getProductPricePair } from '@/lib/promotionUtils';
+import { getDisplayPromotion, getProductPricePair, normalizeProductPricing } from '@/lib/promotionUtils';
 import { PromotionBanner, ProductSaleFlag } from '@/components/Products/PromotionBadge';
 import { formatPrice } from '@/lib/currencyUtils';
 import { currencyCode, trackViewContent } from '@/lib/metaPixel';
@@ -93,7 +93,10 @@ interface ProductDetailContentProps {
 
 export default function ProductDetailContent({ slug, initialProduct }: ProductDetailContentProps) {
   const previewProduct = getSavedProductPreview(slug);
-  const [product, setProduct] = useState<Product | null>(initialProduct ?? previewProduct ?? null);
+  const [product, setProduct] = useState<Product | null>(() => {
+    const seed = initialProduct ?? previewProduct ?? null;
+    return seed ? (normalizeProductPricing(seed) as Product) : null;
+  });
   const [loading, setLoading] = useState(!(initialProduct ?? previewProduct));
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
@@ -269,13 +272,14 @@ export default function ProductDetailContent({ slug, initialProduct }: ProductDe
   // Handle adding simple product to cart
   const handleSimpleProductAddToCart = () => {
     if (product && !isTemplate && product.stock && product.stock.totalStock > 0) {
+      const pair = getProductPricePair(product);
       const cartItem = {
         id: product.name,
         name: product.item_name,
         description: product.description || "",
         type: "item",
-        basePrice: product.base_price || product.price || 0,
-        salePrice: product.sale_price || product.price || 0,
+        basePrice: pair.base || product.base_price || product.price || 0,
+        salePrice: pair.sale || product.sale_price || product.price || 0,
         category: product.item_group || "product",
         item_group: product.item_group,
         currency: product.currency || "PKR",
@@ -318,7 +322,7 @@ export default function ProductDetailContent({ slug, initialProduct }: ProductDe
         });
         const data = await response.json();
         if (!response.ok) throw new Error(data.error || 'Failed to fetch product');
-        setProduct(data.product);
+        setProduct(normalizeProductPricing(data.product));
         saveProductPreview(encodeURIComponent(slug), data.product);
       } catch (err) {
         console.error('Error fetching product:', err);
@@ -437,13 +441,17 @@ export default function ProductDetailContent({ slug, initialProduct }: ProductDe
       (activeVariation as any).stock &&
       (activeVariation as any).stock.totalStock > 0
     ) {
+      const pair = getProductPricePair({
+        ...activeVariation,
+        promotion: activeVariation.promotion ?? product?.promotion,
+      });
       const cartItem = {
         id: activeVariation.name,
         name: activeVariation.item_name,
         description: activeVariation.description || product?.description || "",
         type: "item",
-        basePrice: activeVariation.base_price || activeVariation.price || 0,
-        salePrice: activeVariation.sale_price || activeVariation.price || 0,
+        basePrice: pair.base || activeVariation.base_price || activeVariation.price || 0,
+        salePrice: pair.sale || activeVariation.sale_price || activeVariation.price || 0,
         category: product?.item_group || "product",
         item_group: product?.item_group,
         currency: activeVariation.currency || "PKR",

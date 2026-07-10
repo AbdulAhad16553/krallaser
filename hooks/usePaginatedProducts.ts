@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { productsCache } from "@/lib/clientCache";
+import { normalizeProductsPricing } from "@/lib/promotionUtils";
 
 interface PaginationInfo {
   currentPage: number;
@@ -71,7 +72,11 @@ export const usePaginatedProducts = (
   } = options;
 
   const hasInitialProducts = initialProducts.length > 0;
-  const [products, setProducts] = useState<Product[]>(initialProducts);
+  const [products, setProducts] = useState<Product[]>(() =>
+    hasInitialProducts
+      ? (normalizeProductsPricing(initialProducts) as Product[])
+      : []
+  );
   const [pagination, setPagination] = useState<PaginationInfo | null>(
     hasInitialProducts
       ? {
@@ -113,7 +118,7 @@ export const usePaginatedProducts = (
         }
 
         const batch = Array.isArray(data.products) ? data.products : [];
-        acc.push(...batch);
+        acc.push(...(normalizeProductsPricing(batch) as Product[]));
 
         if (batch.length === 0) break;
         if (batch.length < BATCH_LIMIT) break;
@@ -150,10 +155,10 @@ export const usePaginatedProducts = (
         setLoading(true);
         setError(null);
 
-        const cacheKey = `products-v2-page-${page}-limit-${pageSize}-mode-${mode}`;
+        const cacheKey = `products-v3-page-${page}-limit-${pageSize}-mode-${mode}-light-${light ? 1 : 0}`;
         const cachedData = productsCache.get(cacheKey);
         if (cachedData) {
-          setProducts(cachedData.products);
+          setProducts(normalizeProductsPricing(cachedData.products || []) as Product[]);
           setPagination(cachedData.pagination);
           setLoading(false);
           return;
@@ -172,12 +177,13 @@ export const usePaginatedProducts = (
           throw new Error(data.error || "Failed to fetch products");
         }
 
+        const products = normalizeProductsPricing(data.products || []) as Product[];
         productsCache.set(cacheKey, {
-          products: data.products,
+          products,
           pagination: data.pagination,
         });
 
-        setProducts(data.products);
+        setProducts(products);
         setPagination(data.pagination);
       } catch (err) {
         console.error("Error loading products:", err);
@@ -197,11 +203,14 @@ export const usePaginatedProducts = (
       setError(null);
 
       const nextPage = pagination.currentPage + 1;
-      const cacheKey = `products-v2-page-${nextPage}-limit-${pageSize}-mode-${mode}`;
+      const cacheKey = `products-v3-page-${nextPage}-limit-${pageSize}-mode-${mode}-light-${light ? 1 : 0}`;
 
       const cachedData = productsCache.get(cacheKey);
       if (cachedData) {
-        setProducts((prev) => [...prev, ...cachedData.products]);
+        setProducts((prev) => [
+          ...prev,
+          ...(normalizeProductsPricing(cachedData.products || []) as Product[]),
+        ]);
         setPagination(cachedData.pagination);
         setIsLoadingMore(false);
         return;
@@ -220,12 +229,13 @@ export const usePaginatedProducts = (
         throw new Error(data.error || "Failed to fetch products");
       }
 
+      const products = normalizeProductsPricing(data.products || []) as Product[];
       productsCache.set(cacheKey, {
-        products: data.products,
+        products,
         pagination: data.pagination,
       });
 
-      setProducts((prev) => [...prev, ...data.products]);
+      setProducts((prev) => [...prev, ...products]);
       setPagination(data.pagination);
     } catch (err) {
       console.error("Error loading more products:", err);
@@ -248,7 +258,7 @@ export const usePaginatedProducts = (
       return;
     }
     if (pagination) {
-      const cacheKey = `products-v2-page-${pagination.currentPage}-limit-${pageSize}-mode-${mode}`;
+      const cacheKey = `products-v3-page-${pagination.currentPage}-limit-${pageSize}-mode-${mode}-light-${light ? 1 : 0}`;
       productsCache.delete(cacheKey);
     }
     if (pagination) {
@@ -264,6 +274,7 @@ export const usePaginatedProducts = (
     initialPage,
     pageSize,
     mode,
+    light,
   ]);
 
   useEffect(() => {

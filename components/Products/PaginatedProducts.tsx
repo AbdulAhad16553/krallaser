@@ -80,7 +80,8 @@ const PaginatedProducts: React.FC<PaginatedProductsProps> = ({
     mode: quoteFilter,
     initialProducts,
     loadFullCatalog: quoteFilter === "all" && initialProducts.length === 0,
-    light: quoteFilter !== "all" || initialProducts.length > 0,
+    // Parts/shop need Item Price for correct sale display — light mode skips it
+    light: quoteFilter === "machine",
   });
 
   const {
