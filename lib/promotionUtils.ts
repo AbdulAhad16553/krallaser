@@ -96,6 +96,24 @@ export function hasPromotionalPricing(product: any): boolean {
   return base > 0 && sale > 0 && sale < base;
 }
 
+/** True when product (or a variation) is on a pricing-rule / sale discount */
+export function isOnSaleProduct(product: any): boolean {
+  return getDisplayPromotion(product) != null;
+}
+
+/** Pin sale items to the front while keeping relative order within each group */
+export function sortSaleItemsFirst<T>(products: T[]): T[] {
+  if (!products?.length) return products;
+  const onSale: T[] = [];
+  const regular: T[] = [];
+  for (const product of products) {
+    if (isOnSaleProduct(product)) onSale.push(product);
+    else regular.push(product);
+  }
+  if (!onSale.length) return products;
+  return [...onSale, ...regular];
+}
+
 /** Promotion for badges — ERP rule or inferred from sale vs base price */
 export function getDisplayPromotion(product: any): ItemPromotion | null {
   const existing = getProductPromotion(product);

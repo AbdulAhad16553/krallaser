@@ -21,7 +21,7 @@ import { subscribeHomeCatalogSearchQuery } from "@/lib/catalogSearchBridge";
 import { getProductSlug, warmProductNavigation } from "@/lib/productNavigation";
 import { useRestoreListingScroll } from "@/lib/listScrollRestoration";
 import { useRouter } from "next/navigation";
-import { getProductPromotion, hasPromotionalPricing } from "@/lib/promotionUtils";
+import { getProductPromotion, hasPromotionalPricing, isOnSaleProduct, sortSaleItemsFirst } from "@/lib/promotionUtils";
 import { ProductSaleFlag } from "@/components/Products/PromotionBadge";
 
 function filterProductsByQuery(products: any[], q: string): any[] {
@@ -34,6 +34,23 @@ function filterProductsByQuery(products: any[], q: string): any[] {
     const blob = raw.replace(/<[^>]*>/g, " ").toLowerCase();
     return blob.includes(needle);
   });
+}
+
+/** Machine / custom quotation items (ERPNext custom_quotation_item) */
+function isQuotationItem(product: any): boolean {
+  const flag =
+    product?.custom_quotation_item ?? product?.custom_custom_quotation_item;
+  return (
+    flag === 1 ||
+    flag === "1" ||
+    flag === true ||
+    flag === "Yes" ||
+    product?.enable_quote_request === true
+  );
+}
+
+function excludeQuotationItems(products: any[]): any[] {
+  return products.filter((p) => !isQuotationItem(p));
 }
 
 interface HomeProductsProps {
@@ -142,10 +159,14 @@ const HomeProducts: React.FC<HomeProductsProps> = ({
     const hasInitialData = initialProducts && initialProducts.length > 0;
 
     if (hasInitialData) {
-      setProducts(initialProducts);
+      const seeded =
+        catalogMode === "parts"
+          ? excludeQuotationItems(initialProducts)
+          : initialProducts;
+      setProducts(seeded);
       setLoading(false);
       if (mobileInfiniteScroll) {
-        setVisibleCount(Math.min(mobileBatchSize, initialProducts.length));
+        setVisibleCount(Math.min(mobileBatchSize, seeded.length));
         nextCatalogPageRef.current = 2;
         setRemoteExhausted(false);
         remoteExhaustedRef.current = false;
@@ -162,7 +183,8 @@ const HomeProducts: React.FC<HomeProductsProps> = ({
         const data = await response.json();
 
         if (!response.ok) throw new Error(data.error || 'Failed to fetch products');
-        const list = data.products || [];
+        let list = data.products || [];
+        if (catalogMode === "parts") list = excludeQuotationItems(list);
         if (!isCancelled) {
           setProducts(mobileInfiniteScroll ? list : list.slice(0, 8));
           if (mobileInfiniteScroll) {
@@ -181,12 +203,16 @@ const HomeProducts: React.FC<HomeProductsProps> = ({
     return () => { isCancelled = true; };
   }, [initialProducts, mobileInfiniteScroll, mobileBatchSize, catalogMode]);
 
-  const filteredProducts = useMemo(
-    () =>
-      mobileCatalogSearch
-        ? filterProductsByQuery(products, searchQuery)
-        : products,
-    [products, searchQuery, mobileCatalogSearch]
+  const filteredProducts = useMemo(() => {
+    let list = products;
+    if (catalogMode === "parts") list = excludeQuotationItems(list);
+    if (mobileCatalogSearch) list = filterProductsByQuery(list, searchQuery);
+    return sortSaleItemsFirst(list);
+  }, [products, searchQuery, mobileCatalogSearch, catalogMode]);
+
+  const saleItemsCount = useMemo(
+    () => filteredProducts.filter((p) => isOnSaleProduct(p)).length,
+    [filteredProducts]
   );
 
   const prevSearchKeyRef = useRef<string | null>(null);
@@ -195,22 +221,24 @@ const HomeProducts: React.FC<HomeProductsProps> = ({
     const key = searchQuery;
     if (prevSearchKeyRef.current === key) return;
     prevSearchKeyRef.current = key;
-    const len = filterProductsByQuery(productsRef.current, key).length;
+    const base =
+      catalogMode === "parts"
+        ? excludeQuotationItems(productsRef.current)
+        : productsRef.current;
+    const len = filterProductsByQuery(base, key).length;
     setVisibleCount(Math.min(mobileBatchSize, len));
-  }, [searchQuery, mobileCatalogSearch, mobileInfiniteScroll, mobileBatchSize]);
+  }, [searchQuery, mobileCatalogSearch, mobileInfiniteScroll, mobileBatchSize, catalogMode]);
 
   const totalCatalog = catalogTotalProducts > 0 ? catalogTotalProducts : products.length;
 
   const productsToShow = useMemo(() => {
-    const source = mobileCatalogSearch ? filteredProducts : products;
+    const source = filteredProducts;
     if (mobileInfiniteScroll) {
       return source.slice(0, Math.min(visibleCount, source.length));
     }
     return source.slice(0, productLimit);
   }, [
-    mobileCatalogSearch,
     filteredProducts,
-    products,
     mobileInfiniteScroll,
     visibleCount,
     productLimit,
@@ -222,7 +250,9 @@ const HomeProducts: React.FC<HomeProductsProps> = ({
     const prods = productsRef.current;
     const vis = visibleCountRef.current;
     const q = mobileCatalogSearch ? searchQueryRef.current : "";
-    const filtered = filterProductsByQuery(prods, q);
+    const base =
+      catalogMode === "parts" ? excludeQuotationItems(prods) : prods;
+    const filtered = filterProductsByQuery(base, q);
 
     if (vis < filtered.length) {
       setVisibleCount((v) => Math.min(v + mobileBatchSize, filtered.length));
@@ -242,7 +272,11 @@ const HomeProducts: React.FC<HomeProductsProps> = ({
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Failed to load more");
 
-      const batch = Array.isArray(data.products) ? data.products : [];
+      const batchRaw = Array.isArray(data.products) ? data.products : [];
+      const batch =
+        catalogMode === "parts"
+          ? excludeQuotationItems(batchRaw)
+          : batchRaw;
       if (batch.length === 0) {
         setRemoteExhausted(true);
         remoteExhaustedRef.current = true;
@@ -261,8 +295,10 @@ const HomeProducts: React.FC<HomeProductsProps> = ({
         remoteExhaustedRef.current = true;
       }
 
+      const afterBase =
+        catalogMode === "parts" ? excludeQuotationItems(merged) : merged;
       const afterFilter = filterProductsByQuery(
-        merged,
+        afterBase,
         mobileCatalogSearch ? searchQueryRef.current : ""
       );
       setVisibleCount((v) =>
@@ -404,6 +440,17 @@ const HomeProducts: React.FC<HomeProductsProps> = ({
           No products match &ldquo;{searchQuery.trim()}&rdquo;. Try other keywords or scroll to load more items, then search again.
         </div>
       ) : (
+      <>
+      {saleItemsCount > 0 && (
+        <div className="mb-3 flex items-center gap-2 rounded-xl border border-red-200 bg-gradient-to-r from-red-50 to-orange-50 px-3 py-2 text-sm text-red-800">
+          <span className="inline-flex h-6 items-center rounded bg-red-600 px-2 text-[11px] font-extrabold uppercase tracking-wide text-white">
+            On Sale
+          </span>
+          <p className="font-medium text-xs sm:text-sm">
+            {saleItemsCount} item{saleItemsCount === 1 ? "" : "s"} on sale — shown first
+          </p>
+        </div>
+      )}
       <motion.div
         className={cn(
           exploreMobile
@@ -639,6 +686,7 @@ const HomeProducts: React.FC<HomeProductsProps> = ({
           );
         })}
       </motion.div>
+      </>
       )}
 
       {/* View All — hidden on mobile home when infinite scroll is enabled */}

@@ -30,7 +30,7 @@ import MachinePageSkeleton from "@/common/Skeletons/MachinePage";
 import PartsPageSkeleton from "@/common/Skeletons/PartsPage";
 import { getProductSlug, warmProductNavigation } from "@/lib/productNavigation";
 import { useRestoreListingScroll } from "@/lib/listScrollRestoration";
-import { getProductPromotion, getPromotionLabel, hasPromotionalPricing } from "@/lib/promotionUtils";
+import { getProductPromotion, getPromotionLabel, hasPromotionalPricing, isOnSaleProduct, sortSaleItemsFirst } from "@/lib/promotionUtils";
 import { ProductSaleFlag } from "@/components/Products/PromotionBadge";
 
 interface PaginatedProductsProps {
@@ -170,8 +170,14 @@ const PaginatedProducts: React.FC<PaginatedProductsProps> = ({
         break;
     }
 
-    return sorted;
+    // Sale / promo items always appear first
+    return sortSaleItemsFirst(sorted);
   }, [products, selectedCategory, searchTerm, sortBy, quoteFilter]);
+
+  const saleItemsCount = React.useMemo(
+    () => visibleProducts.filter((p) => isOnSaleProduct(p)).length,
+    [visibleProducts]
+  );
 
   // Extract image IDs for batch optimization
   const imageIds = React.useMemo(() => {
@@ -318,6 +324,17 @@ const PaginatedProducts: React.FC<PaginatedProductsProps> = ({
           </p>
         </div>
       </div>
+
+      {saleItemsCount > 0 && (
+        <div className="mb-4 flex items-center gap-2 rounded-xl border border-red-200 bg-gradient-to-r from-red-50 to-orange-50 px-3 py-2.5 text-sm text-red-800 sm:px-4">
+          <span className="inline-flex h-6 items-center rounded bg-red-600 px-2 text-[11px] font-extrabold uppercase tracking-wide text-white">
+            On Sale
+          </span>
+          <p className="font-medium">
+            {saleItemsCount} item{saleItemsCount === 1 ? "" : "s"} on sale — shown first
+          </p>
+        </div>
+      )}
 
       {/* Products Grid */}
       <div

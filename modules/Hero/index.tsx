@@ -125,6 +125,9 @@ const Hero = async ({
                 initialProducts={homeFeaturedProducts.initialProducts}
                 className="w-full"
                 productLimit={homeFeaturedProductLimit}
+                catalogMode="parts"
+                sectionTitle="Parts & accessories"
+                sectionSubtitle="Browse spare parts — sale items shown first"
               />
             </Suspense>
           </div>

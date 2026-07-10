@@ -184,9 +184,25 @@ export default async function Home() {
       product_variations,
       product_images,
       promotion: product?.promotion,
+      custom_quotation_item:
+        product?.custom_quotation_item ??
+        product?.custom_custom_quotation_item ??
+        0,
       /** From /api/products — use for instant card preview (no batch-image API) */
       image_url: product?.image_url,
     };
+  };
+
+  const isQuotationItem = (product: any) => {
+    const flag =
+      product?.custom_quotation_item ?? product?.custom_custom_quotation_item;
+    return (
+      flag === 1 ||
+      flag === "1" ||
+      flag === true ||
+      flag === "Yes" ||
+      product?.enable_quote_request === true
+    );
   };
 
   const catalogLimit = 100;
@@ -202,7 +218,9 @@ export default async function Home() {
 
     if (firstResponse.ok) {
       const firstData = await firstResponse.json();
-      const products = firstData.products || [];
+      const products = (firstData.products || []).filter(
+        (p: any) => !isQuotationItem(p)
+      );
       homeCatalogTotalProducts =
         Number(firstData.pagination?.totalProducts) || products.length;
       const normalizedProducts = products.map(buildFeaturedProductPayload);

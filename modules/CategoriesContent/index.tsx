@@ -7,6 +7,7 @@ import ProductImagePreview from "@/components/ProductImagePreview";
 import { useBatchItemImages } from "@/hooks/useBatchItemImages";
 import { SortAsc, Wrench, Shield, Package, Search } from "lucide-react";
 import Link from "next/link";
+import { isOnSaleProduct, sortSaleItemsFirst } from "@/lib/promotionUtils";
 
 interface NecessaryProps {
   storeId: string;
@@ -95,8 +96,12 @@ const CategoriesContent = ({
   };
 
   const sortedProducts = useMemo(
-    () => sortProducts(productsAfterSearch, sortBy),
+    () => sortSaleItemsFirst(sortProducts(productsAfterSearch, sortBy)),
     [productsAfterSearch, sortBy]
+  );
+  const saleItemsCount = useMemo(
+    () => sortedProducts.filter((p) => isOnSaleProduct(p)).length,
+    [sortedProducts]
   );
   const hasProducts = safeCatProducts.length > 0;
   const hasSubCategories = Array.isArray(catSubCats) && catSubCats.length > 0;
@@ -218,6 +223,17 @@ const CategoriesContent = ({
               </div>
               </div>
             </motion.div>
+
+            {saleItemsCount > 0 && (
+              <div className="mb-6 flex items-center gap-2 rounded-xl border border-red-200 bg-gradient-to-r from-red-50 to-orange-50 px-3 py-2.5 text-sm text-red-800 sm:px-4">
+                <span className="inline-flex h-6 items-center rounded bg-red-600 px-2 text-[11px] font-extrabold uppercase tracking-wide text-white">
+                  On Sale
+                </span>
+                <p className="font-medium">
+                  {saleItemsCount} item{saleItemsCount === 1 ? "" : "s"} on sale — shown first
+                </p>
+              </div>
+            )}
 
             {/* Product grid with stagger animation */}
             {sortedProducts.length === 0 ? (
