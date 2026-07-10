@@ -14,6 +14,11 @@ export const AddToCart = (product: any, quantity: number = 1) => {
         if (product.isVariation && product.variationId) {
             uniqueId = `${product.id}_${product.variationId}`;
         }
+
+        const basePrice = Number(product.basePrice ?? product.price ?? 0) || 0;
+        const salePrice =
+          Number(product.salePrice ?? product.price ?? basePrice) || 0;
+        const unitPrice = salePrice > 0 ? salePrice : basePrice;
         
         // Check if product already exists in cart
         const existingItemIndex = existingCart.findIndex((item: any) => {
@@ -24,16 +29,19 @@ export const AddToCart = (product: any, quantity: number = 1) => {
         });
         
         if (existingItemIndex > -1) {
-            // Update quantity if product exists
+            // Update quantity and refresh sale pricing
             existingCart[existingItemIndex].quantity += quantity;
+            existingCart[existingItemIndex].basePrice = basePrice;
+            existingCart[existingItemIndex].salePrice = unitPrice;
+            existingCart[existingItemIndex].price = unitPrice;
         } else {
             // Add new product to cart
             const cartItem = {
                 id: product.id,
                 name: product.name,
-                basePrice: product.basePrice || product.price || 0,
-                salePrice: product.salePrice || product.price || 0,
-                price: product.salePrice || product.basePrice || product.price || 0,
+                basePrice,
+                salePrice: unitPrice,
+                price: unitPrice,
                 quantity: quantity,
                 image: {
                     image_id: product.image?.image_id || product.image
@@ -59,8 +67,6 @@ export const AddToCart = (product: any, quantity: number = 1) => {
         // Dispatch custom event to notify components
         window.dispatchEvent(new CustomEvent("cartUpdated"));
 
-        const unitPrice =
-          Number(product.salePrice ?? product.basePrice ?? product.price ?? 0) || 0;
         const contentId = String(
           product.sku || product.variationId || product.id || uniqueId || ""
         );

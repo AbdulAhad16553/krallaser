@@ -311,9 +311,10 @@ export default function ProductDetailContent({ slug, initialProduct }: ProductDe
   }, [initialProduct, slug]);
 
   useEffect(() => {
-    if (initialProduct) return; // Server already provided final data
+    let cancelled = false;
     const fetchProduct = async () => {
       try {
+        // Keep SSR/preview visible; refresh so pricing rules are always applied
         if (!product) setLoading(true);
         setError(null);
         const response = await fetch(`/api/product/${slug}`, {
@@ -322,17 +323,26 @@ export default function ProductDetailContent({ slug, initialProduct }: ProductDe
         });
         const data = await response.json();
         if (!response.ok) throw new Error(data.error || 'Failed to fetch product');
+        if (cancelled) return;
         setProduct(normalizeProductPricing(data.product));
         saveProductPreview(encodeURIComponent(slug), data.product);
       } catch (err) {
+        if (cancelled) return;
         console.error('Error fetching product:', err);
-        setError(err instanceof Error ? err.message : 'Failed to fetch product');
+        // Only surface error if we have nothing to show
+        if (!product) {
+          setError(err instanceof Error ? err.message : 'Failed to fetch product');
+        }
       } finally {
-        setLoading(false);
+        if (!cancelled) setLoading(false);
       }
     };
     fetchProduct();
-  }, [slug, initialProduct]);
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- refresh whenever slug changes
+  }, [slug]);
 
   const isTemplate = product?.variants && product?.variants.length > 0;
   const isSimpleProductInStock = product && !isTemplate && product.stock && product.stock.totalStock > 0;
