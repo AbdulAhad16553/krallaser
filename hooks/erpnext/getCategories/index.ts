@@ -25,6 +25,7 @@ export const useCategories = (storeId?: string) => {
       
       // Transform ERPNext categories to match our interface
       const transformedCategories: Category[] = erpnextCategories
+        .filter(category => Number(category.custom__is_website_item) !== 1)
         .filter(category => !category.is_group) // Only get leaf categories
         .map(category => ({
           id: category.name,

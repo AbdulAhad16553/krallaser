@@ -40,14 +40,16 @@ export const getAllCategories = async (storeId: string) => {
     // All Item Groups from ERPNext (parents + leaves, no storefront filters)
     const erpnextCategories = await productService.getCategories();
 
-    const categories: Category[] = erpnextCategories.map((category) => ({
-      id: category.name,
-      name: category.item_group_name,
-      slug: category.name.toLowerCase().replace(/\s+/g, "-"),
-      image_id: category.image,
-      featured: false,
-      parent_id: category.parent_item_group,
-    }));
+    const categories: Category[] = erpnextCategories
+      .filter((category) => Number(category.custom__is_website_item) !== 1)
+      .map((category) => ({
+        id: category.name,
+        name: category.item_group_name,
+        slug: category.name.toLowerCase().replace(/\s+/g, "-"),
+        image_id: category.image,
+        featured: false,
+        parent_id: category.parent_item_group,
+      }));
 
     return { categories };
   } catch (error) {

@@ -6,14 +6,16 @@ export async function GET(request: NextRequest) {
     // Fetch categories from ERPNext (no store ID required)
     const categories = await productService.getCategories();
 
-    const transformedCategories = categories.map((category) => ({
-      id: category.name,
-      name: category.item_group_name,
-      slug: category.name.toLowerCase().replace(/\s+/g, "-"),
-      image_id: category.image,
-      featured: false,
-      parent_id: category.parent_item_group,
-    }));
+    const transformedCategories = categories
+      .filter((category) => Number(category.custom__is_website_item) !== 1)
+      .map((category) => ({
+        id: category.name,
+        name: category.item_group_name,
+        slug: category.name.toLowerCase().replace(/\s+/g, "-"),
+        image_id: category.image,
+        featured: false,
+        parent_id: category.parent_item_group,
+      }));
 
     return NextResponse.json({ categories: transformedCategories });
   } catch (error) {
