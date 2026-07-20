@@ -13,7 +13,7 @@ import {
 import { OPEN_MOBILE_CATEGORY_DRAWER } from "@/lib/mobileCategoryDrawerEvent";
 import Cart from "@/components/Cart";
 import HeaderMobileSearch from "@/components/Header/HeaderMobileSearch";
-import HeaderDesktopSearch from "@/components/Header/HeaderDesktopSearch";
+import HeaderMobileCareersButton from "@/components/Header/HeaderMobileCareersButton";
 import MobileCategoryDrawer from "@/components/Header/MobileCategoryDrawer";
 import { getAllCategories } from "@/hooks/getCategories";
 interface StoreData {
@@ -162,10 +162,9 @@ const Header = ({ storeData }: { storeData: StoreData }) => {
         </div>
       </div>
 
-      {/* Main Header — mobile: white AliExpress-style row (logo · bell) + pill search; desktop: gradient */}
+      {/* Main Header — mobile: logo + bell + search; desktop: gradient with nav (no search) */}
       <header className="site-header-navbar sticky top-0 z-50 border-b border-neutral-200 max-md:bg-white pt-[env(safe-area-inset-top,0px)] shadow-sm md:border-white/20 md:text-white md:shadow-sm">
         <div className="page-container py-3 md:py-4">
-          {/* Mobile: row 1 logo | categories | bell — row 2 full-width search */}
           <div className="flex flex-col gap-3 md:hidden">
             <div className="flex items-center justify-between gap-3">
               <Link href="/" className="group min-w-0 shrink-0">
@@ -178,13 +177,16 @@ const Header = ({ storeData }: { storeData: StoreData }) => {
                   priority
                 />
               </Link>
-              <Link
-                href="/orders"
-                className="relative flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-neutral-900 active:bg-neutral-100"
-                aria-label="Orders and notifications"
-              >
-                <Bell className="h-6 w-6" strokeWidth={1.75} aria-hidden />
-              </Link>
+              <div className="flex items-center gap-2 shrink-0">
+                <HeaderMobileCareersButton />
+                <Link
+                  href="/orders"
+                  className="relative flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-neutral-900 active:bg-neutral-100"
+                  aria-label="Orders and notifications"
+                >
+                  <Bell className="h-6 w-6" strokeWidth={1.75} aria-hidden />
+                </Link>
+              </div>
             </div>
             <Suspense
               fallback={
@@ -293,6 +295,12 @@ const Header = ({ storeData }: { storeData: StoreData }) => {
                 About
               </Link>
               <Link
+                href="/careers"
+                className={`flex-shrink-0 ${navLinkClass(pathname, "/careers")}`}
+              >
+                Talent Board
+              </Link>
+              <Link
                 href="/contact"
                 className={`flex-shrink-0 ${navLinkClass(pathname, "/contact")}`}
               >
@@ -308,16 +316,6 @@ const Header = ({ storeData }: { storeData: StoreData }) => {
               >
                 <Bell className="h-6 w-6" />
               </Link>
-              <Suspense
-                fallback={
-                  <div
-                    className="header-search-bar hidden md:block h-9 w-full max-w-xs rounded-lg border"
-                    aria-hidden
-                  />
-                }
-              >
-                <HeaderDesktopSearch />
-              </Suspense>
               <Link
                 href="/wishlist"
                 className="relative rounded-md p-2 text-white transition-all duration-300 hover:bg-white/15 hover:text-red-200 hover:scale-110 active:scale-95 group"

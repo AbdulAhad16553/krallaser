@@ -1501,4 +1501,187 @@ body {
       animation: none !important;
     }
   }
+
+  /* ── Talent Board ── */
+  .talent-hero {
+    background: var(--primary-gradient);
+    border-radius: 1.25rem;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .talent-hero::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background:
+      radial-gradient(circle at 20% 20%, rgba(255, 255, 255, 0.12) 0%, transparent 45%),
+      radial-gradient(circle at 80% 80%, rgba(230, 0, 1, 0.25) 0%, transparent 50%);
+    pointer-events: none;
+  }
+
+  .talent-stat-card {
+    background: rgba(255, 255, 255, 0.97);
+    border: 1px solid rgba(230, 0, 1, 0.08);
+    border-radius: 1rem;
+    transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+  }
+
+  .talent-stat-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 28px -8px rgba(230, 0, 1, 0.18);
+    border-color: rgba(230, 0, 1, 0.2);
+  }
+
+  .talent-stat-icon {
+    background: linear-gradient(135deg, rgba(230, 0, 1, 0.12) 0%, rgba(0, 0, 0, 0.06) 100%);
+    color: var(--primary-color);
+  }
+
+  .talent-candidate-card {
+    background: #fff;
+    border: 1px solid rgba(15, 23, 42, 0.08);
+    border-radius: 1rem;
+    transition: transform 0.22s ease, box-shadow 0.22s ease, border-color 0.22s ease;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .talent-candidate-card::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: var(--primary-gradient);
+    opacity: 0;
+    transition: opacity 0.22s ease;
+  }
+
+  .talent-candidate-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 16px 32px -12px rgba(230, 0, 1, 0.22);
+    border-color: rgba(230, 0, 1, 0.15);
+  }
+
+  .talent-candidate-card:hover::before {
+    opacity: 1;
+  }
+
+  .talent-avatar {
+    background: var(--primary-gradient);
+    color: #fff;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    box-shadow: 0 4px 14px -4px rgba(230, 0, 1, 0.45);
+  }
+
+  .talent-search-wrap {
+    background: #fff;
+    border: 1px solid rgba(15, 23, 42, 0.1);
+    border-radius: 9999px;
+    box-shadow: 0 4px 20px -8px rgba(0, 0, 0, 0.12);
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  }
+
+  .talent-search-wrap:focus-within {
+    border-color: rgba(230, 0, 1, 0.35);
+    box-shadow: 0 0 0 3px rgba(230, 0, 1, 0.1), 0 4px 20px -8px rgba(230, 0, 1, 0.15);
+  }
+
+  .talent-dialog-header {
+    background: var(--primary-gradient);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .talent-dialog-header::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(circle at 100% 0%, rgba(255, 255, 255, 0.15) 0%, transparent 55%);
+    pointer-events: none;
+  }
+
+  .talent-section-label {
+    font-size: 0.6875rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--primary-color);
+  }
+
+  .talent-contact-box {
+    background: linear-gradient(135deg, rgba(230, 0, 1, 0.04) 0%, rgba(0, 0, 0, 0.02) 100%);
+    border: 1px solid rgba(230, 0, 1, 0.1);
+    border-radius: 0.875rem;
+  }
+
+  .talent-badge-cv {
+    background: linear-gradient(135deg, rgba(230, 0, 1, 0.1) 0%, rgba(176, 4, 5, 0.08) 100%);
+    color: var(--primary-hover);
+    border: 1px solid rgba(230, 0, 1, 0.15);
+  }
+
+  .talent-btn-primary {
+    background: var(--primary-gradient) !important;
+    color: #fff !important;
+    border: none;
+    transition: opacity 0.2s ease, transform 0.15s ease;
+  }
+
+  .talent-btn-primary:hover {
+    opacity: 0.92;
+    transform: translateY(-1px);
+  }
+
+  .talent-btn-outline {
+    border-color: rgba(230, 0, 1, 0.25) !important;
+    color: var(--primary-color) !important;
+  }
+
+  .talent-btn-outline:hover {
+    background: rgba(230, 0, 1, 0.06) !important;
+  }
+
+  .talent-dialog-overlay {
+    background: rgba(15, 23, 42, 0.28);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+  }
+
+  .talent-dialog-panel {
+    background: #fff;
+    border: 1px solid rgba(255, 255, 255, 0.95);
+    box-shadow:
+      0 0 0 1px rgba(230, 0, 1, 0.06),
+      0 24px 48px -12px rgba(0, 0, 0, 0.28),
+      0 12px 24px -8px rgba(230, 0, 1, 0.12);
+  }
+
+  .talent-dialog-panel::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    padding: 1px;
+    background: linear-gradient(
+      135deg,
+      rgba(230, 0, 1, 0.35) 0%,
+      rgba(255, 255, 255, 0.2) 40%,
+      rgba(0, 0, 0, 0.08) 100%
+    );
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    pointer-events: none;
+  }
+
+  .talent-dialog-footer {
+    background: linear-gradient(to top, #fff 85%, rgba(255, 255, 255, 0.92));
+    backdrop-filter: blur(8px);
+    border-top: 1px solid rgba(15, 23, 42, 0.06);
+  }
 }

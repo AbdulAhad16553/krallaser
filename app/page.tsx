@@ -14,6 +14,8 @@ import { Suspense } from "react";
 import Layout from "@/components/Layout";
 import HomeProducts from "@/components/Products/HomeProducts";
 import ProductSkeleton from "@/common/Skeletons/Products";
+import MobileInstallationFab from "@/components/MobileInstallationFab";
+import MachineInstallationGuide from "@/components/MachineInstallationGuide";
 import { getCategories } from "@/hooks/getCategories";
 import { getStorePage } from "@/hooks/getStorePage";
 import {
@@ -278,6 +280,7 @@ export default async function Home() {
 
   return (
     <Layout>
+      <MobileInstallationFab />
       {/* Mobile home: site header + product grid */}
       <div className="page-container md:hidden py-4 pb-6">
         <Suspense fallback={<ProductSkeleton />}>
@@ -298,6 +301,10 @@ export default async function Home() {
             mobileCatalogSearch
           />
         </Suspense>
+
+        <div className="mt-8 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+          <MachineInstallationGuide compact showPageLink />
+        </div>
       </div>
 
       <div className="hidden md:block">
@@ -346,6 +353,10 @@ export default async function Home() {
         </div>
 
         <HomeSeoIntro />
+
+        <div className="page-container py-12 lg:py-14 bg-white border-b border-[var(--secondary-color)]/10">
+          <MachineInstallationGuide showPageLink />
+        </div>
 
         <JsonLd
           data={buildWebPageSchema({
